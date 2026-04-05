@@ -3,7 +3,7 @@ module github.com/djtouchette/witness
 go 1.25.4
 
 require (
-	github.com/djtouchette/recon v0.5.0
+	github.com/djtouchette/recon v0.7.0
 	github.com/spf13/cobra v1.10.2
 )
 
