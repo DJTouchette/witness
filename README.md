@@ -29,24 +29,34 @@ witness select internal/orders/handler.go internal/billing/charge.go
 
 # Get a runnable command instead of a list
 witness select --format exec
+
+# Or just select and run the tests, exiting with the runner's code
+witness run
 ```
 
 ## Usage
 
 ```
-witness select [files...]
+witness select [files...]   # print the selected tests (json / paths / exec)
+witness run    [files...]   # select and execute them, exiting with their code
 ```
 
-If no files are given, witness detects changes from `git diff`. Output is JSON by default, with per-test scores and the signals that selected each one.
+If no files are given, witness detects changes from `git diff`. `select` output is JSON by default, with per-test scores and the signals that selected each one. `run` detects the test runner (go test, mix test, pytest, ...), streams its output, and exits with the runner's exit code — so it drops straight into a pre-commit hook or CI step.
 
 ### Flags
 
+Both `select` and `run` share these; only `select` has `--format`.
+
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--format` | `json` | `json` (scored detail), `paths` (one path per line), or `exec` (runnable test command) |
+| `--format` | `json` | (`select` only) `json` (scored detail), `paths` (one path per line), or `exec` (runnable test command) |
 | `--depth` | `2` | How many import hops to traverse backward |
 | `--min-score` | `0.1` | Drop tests scoring below this |
 | `--max` | `50` | Cap on number of tests returned |
+| `--kind <k>` | | Only return tests of these kinds: `unit`, `integration`, `e2e`, ... (repeatable) |
+| `--exclude <glob>` | | Drop test paths matching a glob, e.g. `vendor/**` (repeatable) |
+| `--co-change-min` | `2` | Minimum co-change count before a co-changed test counts |
+| `--fan-out-cap` | `100` | Don't expand files with more importers than this |
 | `--staged` | | Use `git diff --staged` (great for pre-commit hooks) |
 | `--since <ref>` | | Use `git diff <ref>...HEAD` (great for PR review) |
 | `--cache-dir <path>` | `.witness/` | recon cache directory |
@@ -54,14 +64,17 @@ If no files are given, witness detects changes from `git diff`. Output is JSON b
 ### Common patterns
 
 ```bash
-# Pre-commit: only the tests for what you're about to commit
-witness select --staged --format exec
+# Pre-commit: run only the tests for what you're about to commit
+witness run --staged
 
 # PR review: everything affected since main
 witness select --since main --format paths
 
 # Tighter selection: direct + 1-hop only
 witness select --depth 1 --min-score 0.5
+
+# Unit tests only, skipping vendored and generated tests
+witness run --kind unit --exclude 'vendor/**' --exclude '**/generated/**'
 ```
 
 ## How Scoring Works
@@ -69,7 +82,7 @@ witness select --depth 1 --min-score 0.5
 For each changed file, witness:
 
 1. **Direct match** — if the file *is* a test, or has a known test, include it (score 1.0).
-2. **Reverse dependency walk** — BFS backward through the import graph ("who imports this?") up to `--depth`, scoring by hop distance. Files with more than 100 importers are treated as fan-out boundaries and not expanded, so framework/utility files don't explode the result set.
+2. **Reverse dependency walk** — BFS backward through the import graph ("who imports this?") up to `--depth`, scoring by hop distance. Files with more importers than `--fan-out-cap` (default 100) are treated as fan-out boundaries and not expanded, so framework/utility files don't explode the result set.
 3. **Co-change history** — tests that have historically changed alongside this file, scored by frequency.
 4. **Hotspot boost** — if the changed file is high-risk (high fan-in × churn), nudge its candidate tests up.
 
@@ -81,7 +94,9 @@ The selector is available as a Go package (`github.com/djtouchette/witness/pkg/w
 
 ```go
 w, _ := witness.New(".")
-res, _ := w.SelectStaged()       // or Select(files), SelectSince(ref)
+defer w.Close()
+opts := selector.DefaultOptions()
+res, _ := w.SelectStaged(opts)   // or Select(files, opts), SelectSince(ref, opts)
 ```
 
 The full CLI command is also importable (`github.com/djtouchette/witness/pkg/embedded`) for embedding into another binary — which is how Rivet wires it in.

@@ -2,12 +2,12 @@ package selector
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/djtouchette/recon/pkg/recon"
 )
-
-const fanOutCap = 100
 
 // RepoIntel is the slice of recon's repo intelligence that the selector needs.
 // Taking an interface (rather than the concrete *recon.Recon) keeps the scoring
@@ -26,13 +26,19 @@ type RepoIntel interface {
 // and hotspot risk scoring to produce a prioritized list.
 func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResult, error) {
 	if opts.MaxDepth <= 0 {
-		opts.MaxDepth = 2
+		opts.MaxDepth = defaultMaxDepth
 	}
 	if opts.MinScore <= 0 {
-		opts.MinScore = 0.1
+		opts.MinScore = defaultMinScore
 	}
 	if opts.MaxTests <= 0 {
-		opts.MaxTests = 50
+		opts.MaxTests = defaultMaxTests
+	}
+	if opts.CoChangeMinCount <= 0 {
+		opts.CoChangeMinCount = defaultCoChangeMinCount
+	}
+	if opts.FanOutCap <= 0 {
+		opts.FanOutCap = defaultFanOutCap
 	}
 
 	candidates := make(map[string]*ScoredTest)
@@ -61,7 +67,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 
 			for _, file := range frontier {
 				importers := r.ImportedBy(file)
-				if len(importers) > fanOutCap {
+				if len(importers) > opts.FanOutCap {
 					// Skip high-fan-out files (utilities) to avoid explosion.
 					continue
 				}
@@ -86,7 +92,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 		}
 
 		// Step 4: Co-change tests.
-		cochanged := r.CoChangedWith(changed, 2)
+		cochanged := r.CoChangedWith(changed, opts.CoChangeMinCount)
 		for _, pair := range cochanged {
 			score := cochangeScore(pair.Count)
 			if r.IsTestFile(pair.File) {
@@ -112,6 +118,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 	}
 
 	// Step 6: Build result, filter, sort.
+	kindFilter := newKindFilter(opts.Kinds)
 	var tests []ScoredTest
 	signalCounts := make(map[string]int)
 	for _, c := range candidates {
@@ -120,6 +127,12 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 		}
 		if c.Kind == "" {
 			c.Kind = classifyKind(c.Path)
+		}
+		if excluded(c.Path, opts.Exclude) {
+			continue
+		}
+		if kindFilter != nil && !kindFilter[c.Kind] {
+			continue
 		}
 		tests = append(tests, *c)
 		for _, s := range c.Signals {
@@ -217,10 +230,111 @@ func cochangeScore(count int) float64 {
 	}
 }
 
+// classifyKind infers a test's kind from its path when recon didn't supply one.
+// It's a heuristic over common conventions; recon-provided kinds always win
+// (this is only called when Kind is empty).
 func classifyKind(path string) string {
-	// Delegate to recon's classification.
-	// Simple fallback when kind wasn't set from TestFile.
-	return "unit"
+	p := strings.ToLower(filepath.ToSlash(path))
+	switch {
+	case strings.Contains(p, "e2e") || strings.Contains(p, "end-to-end") || strings.Contains(p, "end_to_end"):
+		return "e2e"
+	case strings.Contains(p, "integration") || hasSegment(p, "it"):
+		return "integration"
+	case strings.Contains(p, "acceptance") || strings.Contains(p, "feature"):
+		return "acceptance"
+	case strings.Contains(p, "smoke"):
+		return "smoke"
+	default:
+		return "unit"
+	}
+}
+
+// hasSegment reports whether name is a full slash-delimited path segment of p
+// (so "it" matches "test/it/foo" but not "unit/foo").
+func hasSegment(p, name string) bool {
+	for _, seg := range strings.Split(p, "/") {
+		if seg == name {
+			return true
+		}
+	}
+	return false
+}
+
+// newKindFilter returns a set of allowed kinds, or nil when no filter is set.
+func newKindFilter(kinds []string) map[string]bool {
+	if len(kinds) == 0 {
+		return nil
+	}
+	set := make(map[string]bool, len(kinds))
+	for _, k := range kinds {
+		k = strings.ToLower(strings.TrimSpace(k))
+		if k != "" {
+			set[k] = true
+		}
+	}
+	if len(set) == 0 {
+		return nil
+	}
+	return set
+}
+
+// excluded reports whether path matches any exclude glob. Patterns support
+// filepath.Match wildcards plus a leading/trailing "**" for directory subtrees
+// (e.g. "vendor/**", "**/generated/**"); they're matched against the full path
+// and the base name.
+func excluded(path string, patterns []string) bool {
+	if len(patterns) == 0 {
+		return false
+	}
+	p := filepath.ToSlash(path)
+	base := filepath.Base(p)
+	for _, pat := range patterns {
+		pat = filepath.ToSlash(pat)
+		if matchGlob(pat, p) || matchGlob(pat, base) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchGlob matches a path against a glob. Without "**" it uses filepath.Match
+// (single "*", no "/" crossing). With "**" the pattern is split into literal
+// segments that must appear in order: the first is anchored to the start unless
+// the pattern begins with "**", the last to the end unless it ends with "**".
+// This covers the common shapes "vendor/**", "**/generated/**", "**/x_test.go".
+func matchGlob(pattern, path string) bool {
+	if !strings.Contains(pattern, "**") {
+		ok, _ := filepath.Match(pattern, path)
+		return ok
+	}
+
+	segs := strings.Split(pattern, "**")
+	anchorStart := !strings.HasPrefix(pattern, "**")
+	anchorEnd := !strings.HasSuffix(pattern, "**")
+
+	pos := 0
+	for i, seg := range segs {
+		seg = strings.Trim(seg, "/")
+		if seg == "" {
+			continue
+		}
+		if i == 0 && anchorStart {
+			if !strings.HasPrefix(path, seg) {
+				return false
+			}
+			pos = len(seg)
+			continue
+		}
+		if i == len(segs)-1 && anchorEnd {
+			return strings.HasSuffix(path, seg) && strings.Index(path[pos:], seg) >= 0
+		}
+		idx := strings.Index(path[pos:], seg)
+		if idx < 0 {
+			return false
+		}
+		pos += idx + len(seg)
+	}
+	return true
 }
 
 func min(a, b float64) float64 {

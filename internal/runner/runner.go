@@ -20,7 +20,7 @@ func FormatCommand(framework string, testPaths []string) string {
 		return "pytest " + strings.Join(testPaths, " ")
 	case "ruby", "rails":
 		return "bundle exec rspec " + strings.Join(testPaths, " ")
-	case "node", "express", "next.js", "react", "vue":
+	case "node", "express", "next.js", "react", "vue", "typescript", "javascript":
 		return "npx jest " + strings.Join(testPaths, " ")
 	case "rust":
 		return "cargo test " + strings.Join(testPaths, " ")

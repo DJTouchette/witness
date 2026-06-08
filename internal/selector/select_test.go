@@ -14,6 +14,8 @@ type fakeIntel struct {
 	importedBy map[string][]string             // file -> importers
 	cochange   map[string][]recon.CoChangePair // file -> co-changed pairs
 	hotspot    map[string]float64              // file -> hotspot score
+
+	cochangeHook func(min int) // observes the minCount passed to CoChangedWith
 }
 
 func newFake() *fakeIntel {
@@ -31,7 +33,10 @@ func (f *fakeIntel) Tests(p string, _ int) ([]recon.TestFile, error) {
 	return f.tests[p], nil
 }
 func (f *fakeIntel) ImportedBy(p string) []string { return f.importedBy[p] }
-func (f *fakeIntel) CoChangedWith(p string, _ int) []recon.CoChangePair {
+func (f *fakeIntel) CoChangedWith(p string, min int) []recon.CoChangePair {
+	if f.cochangeHook != nil {
+		f.cochangeHook(min)
+	}
 	return f.cochange[p]
 }
 func (f *fakeIntel) Context(p string) (*recon.FileContext, error) {
@@ -120,7 +125,7 @@ func TestSelect_ImporterThatIsItselfATest(t *testing.T) {
 func TestSelect_FanOutCapSkipsExplosion(t *testing.T) {
 	f := newFake()
 	// src/util.go has >100 importers — traversal must skip it.
-	many := make([]string, fanOutCap+5)
+	many := make([]string, defaultFanOutCap+5)
 	for i := range many {
 		many[i] = "imp" + itoa(i) + ".go"
 	}
@@ -136,8 +141,8 @@ func TestSelect_FanOutCapSkipsExplosion(t *testing.T) {
 
 func TestSelect_FanOutAtCapStillTraverses(t *testing.T) {
 	f := newFake()
-	// Exactly fanOutCap importers is allowed (cap is "> fanOutCap").
-	many := make([]string, fanOutCap)
+	// Exactly defaultFanOutCap importers is allowed (cap is "> defaultFanOutCap").
+	many := make([]string, defaultFanOutCap)
 	for i := range many {
 		many[i] = "imp" + itoa(i) + ".go"
 	}

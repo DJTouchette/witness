@@ -22,21 +22,91 @@ func NewRootCmd(version string) *cobra.Command {
 	}
 
 	root.Version = version
-	root.AddCommand(newSelectCmd())
+	root.AddCommand(newSelectCmd(), newRunCmd())
 
 	return root
 }
 
+// selectFlags are the knobs shared by `select` and `run`.
+type selectFlags struct {
+	depth     int
+	minScore  float64
+	maxTests  int
+	staged    bool
+	since     string
+	cacheDir  string
+	coChange  int
+	fanOutCap int
+	exclude   []string
+	kinds     []string
+}
+
+func (sf *selectFlags) bind(cmd *cobra.Command) {
+	f := cmd.Flags()
+	f.IntVar(&sf.depth, "depth", 2, "import graph traversal depth")
+	f.Float64Var(&sf.minScore, "min-score", 0.1, "minimum relevance score")
+	f.IntVar(&sf.maxTests, "max", 50, "max tests to return")
+	f.BoolVar(&sf.staged, "staged", false, "use git diff --staged")
+	f.StringVar(&sf.since, "since", "", "use git diff <ref>...HEAD")
+	f.StringVar(&sf.cacheDir, "cache-dir", "", "recon cache directory")
+	f.IntVar(&sf.coChange, "co-change-min", 2, "minimum co-change count to consider")
+	f.IntVar(&sf.fanOutCap, "fan-out-cap", 100, "skip files with more importers than this")
+	f.StringSliceVar(&sf.exclude, "exclude", nil, "glob patterns of test paths to drop (repeatable)")
+	f.StringSliceVar(&sf.kinds, "kind", nil, "only return these test kinds: unit, integration, e2e, ... (repeatable)")
+}
+
+func (sf *selectFlags) options() selector.SelectOptions {
+	return selector.SelectOptions{
+		MaxDepth:         sf.depth,
+		MinScore:         sf.minScore,
+		MaxTests:         sf.maxTests,
+		CoChangeMinCount: sf.coChange,
+		FanOutCap:        sf.fanOutCap,
+		Exclude:          sf.exclude,
+		Kinds:            sf.kinds,
+	}
+}
+
+// resolve opens recon and figures out the changed files (explicit args, or a
+// git diff in the chosen mode). Caller must Close the returned recon.
+func (sf *selectFlags) resolve(args []string) (*recon.Recon, string, []string, error) {
+	root, err := os.Getwd()
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("getting working directory: %w", err)
+	}
+
+	var reconOpts []recon.Option
+	if sf.cacheDir != "" {
+		reconOpts = append(reconOpts, recon.WithCacheDir(sf.cacheDir))
+	}
+	r, err := recon.New(root, reconOpts...)
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("initializing recon: %w", err)
+	}
+
+	changed := args
+	if len(changed) == 0 {
+		mode := gitdiff.WorkingTree
+		ref := ""
+		switch {
+		case sf.staged:
+			mode = gitdiff.Staged
+		case sf.since != "":
+			mode = gitdiff.SinceRef
+			ref = sf.since
+		}
+		changed, err = gitdiff.ChangedFiles(root, mode, ref)
+		if err != nil {
+			r.Close()
+			return nil, "", nil, fmt.Errorf("detecting changes: %w", err)
+		}
+	}
+	return r, root, changed, nil
+}
+
 func newSelectCmd() *cobra.Command {
-	var (
-		depth    int
-		minScore float64
-		maxTests int
-		format   string
-		staged   bool
-		since    string
-		cacheDir string
-	)
+	var sf selectFlags
+	var format string
 
 	cmd := &cobra.Command{
 		Use:   "select [files...]",
@@ -50,35 +120,11 @@ Output formats:
   paths  — one test path per line
   exec   — test runner command (auto-detected: mix test, go test, etc.)`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			root, _ := os.Getwd()
-
-			var reconOpts []recon.Option
-			if cacheDir != "" {
-				reconOpts = append(reconOpts, recon.WithCacheDir(cacheDir))
-			}
-
-			r, err := recon.New(root, reconOpts...)
+			r, _, changedFiles, err := sf.resolve(args)
 			if err != nil {
-				return fmt.Errorf("initializing recon: %w", err)
+				return err
 			}
 			defer r.Close()
-
-			// Determine changed files.
-			changedFiles := args
-			if len(changedFiles) == 0 {
-				mode := gitdiff.WorkingTree
-				ref := ""
-				if staged {
-					mode = gitdiff.Staged
-				} else if since != "" {
-					mode = gitdiff.SinceRef
-					ref = since
-				}
-				changedFiles, err = gitdiff.ChangedFiles(root, mode, ref)
-				if err != nil {
-					return fmt.Errorf("detecting changes: %w", err)
-				}
-			}
 
 			if len(changedFiles) == 0 {
 				if format == "json" {
@@ -89,13 +135,7 @@ Output formats:
 				return nil
 			}
 
-			opts := selector.SelectOptions{
-				MaxDepth: depth,
-				MinScore: minScore,
-				MaxTests: maxTests,
-			}
-
-			result, err := selector.Select(r, changedFiles, opts)
+			result, err := selector.Select(r, changedFiles, sf.options())
 			if err != nil {
 				return err
 			}
@@ -106,41 +146,89 @@ Output formats:
 					fmt.Println(t.Path)
 				}
 			case "exec":
-				var paths []string
-				for _, t := range result.Tests {
-					paths = append(paths, t.Path)
-				}
-				overview, _ := r.Overview()
-				framework := ""
-				if overview != nil {
-					var fwNames []string
-					for _, fw := range overview.Frameworks {
-						fwNames = append(fwNames, fw.Name)
-					}
-					framework = runner.DetectFramework(fwNames)
-					if framework == "" && len(overview.Languages) > 0 {
-						framework = strings.ToLower(overview.Languages[0].Name)
-					}
-				}
-				command := runner.FormatCommand(framework, paths)
-				fmt.Println(command)
+				fmt.Println(commandFor(r, result))
 			default:
 				enc := json.NewEncoder(os.Stdout)
 				enc.SetIndent("", "  ")
 				return enc.Encode(result)
 			}
-
 			return nil
 		},
 	}
 
-	cmd.Flags().IntVar(&depth, "depth", 2, "import graph traversal depth")
-	cmd.Flags().Float64Var(&minScore, "min-score", 0.1, "minimum relevance score")
-	cmd.Flags().IntVar(&maxTests, "max", 50, "max tests to return")
+	sf.bind(cmd)
 	cmd.Flags().StringVar(&format, "format", "json", "output format: json, paths, exec")
-	cmd.Flags().BoolVar(&staged, "staged", false, "use git diff --staged")
-	cmd.Flags().StringVar(&since, "since", "", "use git diff <ref>...HEAD")
-	cmd.Flags().StringVar(&cacheDir, "cache-dir", "", "recon cache directory")
-
 	return cmd
+}
+
+func newRunCmd() *cobra.Command {
+	var sf selectFlags
+
+	cmd := &cobra.Command{
+		Use:   "run [files...]",
+		Short: "Select tests and run them",
+		Long: `Select the relevant tests for the changed files and execute them.
+
+Detects the test runner from the project (go test, mix test, pytest, ...),
+streams its output, and exits with the runner's exit code — so it drops into
+CI or a pre-commit hook directly. With no files, uses git diff like 'select'.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			r, root, changedFiles, err := sf.resolve(args)
+			if err != nil {
+				return err
+			}
+			defer r.Close()
+
+			if len(changedFiles) == 0 {
+				fmt.Fprintln(os.Stderr, "No changed files detected; nothing to run.")
+				return nil
+			}
+
+			result, err := selector.Select(r, changedFiles, sf.options())
+			if err != nil {
+				return err
+			}
+			if len(result.Tests) == 0 {
+				fmt.Fprintln(os.Stderr, "No relevant tests selected; nothing to run.")
+				return nil
+			}
+
+			command := commandFor(r, result)
+			fmt.Fprintf(os.Stderr, "witness: running %d test target(s)\n  $ %s\n\n", len(result.Tests), command)
+
+			code, err := runner.Execute(command, root, os.Stdout, os.Stderr)
+			if err != nil {
+				return err
+			}
+			// Close recon before exiting with the runner's code (os.Exit skips defers).
+			r.Close()
+			os.Exit(code)
+			return nil
+		},
+	}
+
+	sf.bind(cmd)
+	return cmd
+}
+
+// commandFor builds the runnable test command for a selection, detecting the
+// framework from recon's overview (falling back to the primary language).
+func commandFor(r *recon.Recon, result *selector.SelectResult) string {
+	var paths []string
+	for _, t := range result.Tests {
+		paths = append(paths, t.Path)
+	}
+
+	framework := ""
+	if overview, _ := r.Overview(); overview != nil {
+		var fwNames []string
+		for _, fw := range overview.Frameworks {
+			fwNames = append(fwNames, fw.Name)
+		}
+		framework = runner.DetectFramework(fwNames)
+		if framework == "" && len(overview.Languages) > 0 {
+			framework = strings.ToLower(overview.Languages[0].Name)
+		}
+	}
+	return runner.FormatCommand(framework, paths)
 }
