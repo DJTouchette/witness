@@ -9,10 +9,22 @@ import (
 
 const fanOutCap = 100
 
+// RepoIntel is the slice of recon's repo intelligence that the selector needs.
+// Taking an interface (rather than the concrete *recon.Recon) keeps the scoring
+// logic unit-testable with a fake. *recon.Recon satisfies it structurally, so
+// callers pass the real thing unchanged.
+type RepoIntel interface {
+	IsTestFile(path string) bool
+	Tests(path string, maxResults int) ([]recon.TestFile, error)
+	ImportedBy(path string) []string
+	CoChangedWith(path string, minCount int) []recon.CoChangePair
+	Context(path string) (*recon.FileContext, error)
+}
+
 // Select finds tests relevant to the given changed files using recon's repo intelligence.
 // It combines direct test mapping, transitive import walks, co-change history,
 // and hotspot risk scoring to produce a prioritized list.
-func Select(r *recon.Recon, changedFiles []string, opts SelectOptions) (*SelectResult, error) {
+func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResult, error) {
 	if opts.MaxDepth <= 0 {
 		opts.MaxDepth = 2
 	}

@@ -1,2 +1,5 @@
 /witness
 .witness/
+
+# goreleaser build output
+dist/

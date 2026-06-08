@@ -1,0 +1,71 @@
+version: 2
+
+project_name: witness
+
+builds:
+  # witness links tree-sitter (CGo) transitively via recon, so binaries must be
+  # built with CGO_ENABLED=1. The release runs on a macOS runner: darwin builds
+  # natively (zig can't cross-compile Go's CGo to macOS — no real SDK), while
+  # linux and windows are cross-compiled with `zig cc` (zig bundles their libc).
+  # Linux targets pin glibc 2.17 for broad compatibility.
+  - main: ./cmd/witness
+    binary: witness
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    overrides:
+      - goos: linux
+        goarch: amd64
+        env:
+          - CC=zig cc -target x86_64-linux-gnu.2.17
+          - CXX=zig c++ -target x86_64-linux-gnu.2.17
+      - goos: linux
+        goarch: arm64
+        env:
+          - CC=zig cc -target aarch64-linux-gnu.2.17
+          - CXX=zig c++ -target aarch64-linux-gnu.2.17
+      # darwin/* intentionally have no override: native clang on the macOS
+      # runner builds both arches (universal toolchain).
+      - goos: windows
+        goarch: amd64
+        env:
+          - CC=zig cc -target x86_64-windows-gnu
+          - CXX=zig c++ -target x86_64-windows-gnu
+      - goos: windows
+        goarch: arm64
+        env:
+          - CC=zig cc -target aarch64-windows-gnu
+          - CXX=zig c++ -target aarch64-windows-gnu
+
+archives:
+  - formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+
+release:
+  github:
+    owner: DJTouchette
+    name: witness
