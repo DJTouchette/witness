@@ -11,9 +11,9 @@ type ScoredTest struct {
 
 // SelectResult is the output of the Select function.
 type SelectResult struct {
-	ChangedFiles []string    `json:"changed_files"`
+	ChangedFiles []string     `json:"changed_files"`
 	Tests        []ScoredTest `json:"tests"`
-	Summary      Summary     `json:"summary"`
+	Summary      Summary      `json:"summary"`
 }
 
 // Summary provides counts for the selection.
@@ -25,9 +25,9 @@ type Summary struct {
 
 // SelectOptions configures the selection algorithm.
 type SelectOptions struct {
-	MaxDepth  int     // import graph traversal depth (default: 2)
-	MinScore  float64 // minimum score to include (default: 0.1)
-	MaxTests  int     // max tests to return (default: 50)
+	MaxDepth int     // import graph traversal depth (default: 2)
+	MinScore float64 // minimum score to include (default: 0.1)
+	MaxTests int     // max tests to return (default: 50)
 }
 
 // DefaultOptions returns sensible defaults.

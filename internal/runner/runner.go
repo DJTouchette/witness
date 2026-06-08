@@ -55,7 +55,7 @@ func formatGoPackages(paths []string) string {
 	pkgs := make(map[string]bool)
 	for _, p := range paths {
 		dir := filepath.Dir(p)
-		pkgs["./" + dir + "/..."] = true
+		pkgs["./"+dir+"/..."] = true
 	}
 	var result []string
 	for pkg := range pkgs {

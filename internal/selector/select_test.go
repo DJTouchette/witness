@@ -153,7 +153,7 @@ func TestSelect_FanOutAtCapStillTraverses(t *testing.T) {
 func TestSelect_CoChange(t *testing.T) {
 	f := newFake()
 	f.cochange["src/a.go"] = []recon.CoChangePair{
-		{File: "src/b.go", Count: 10}, // -> 0.6
+		{File: "src/b.go", Count: 10},  // -> 0.6
 		{File: "co_test.go", Count: 3}, // test file directly -> 0.3
 	}
 	f.tests["src/b.go"] = []recon.TestFile{{Path: "b_test.go"}}
@@ -235,9 +235,9 @@ func TestSelect_MaxTestsCap(t *testing.T) {
 
 func TestSelect_SortByScoreThenPath(t *testing.T) {
 	f := newFake()
-	f.tests["src/a.go"] = []recon.TestFile{{Path: "zzz_test.go"}}     // 1.0
+	f.tests["src/a.go"] = []recon.TestFile{{Path: "zzz_test.go"}} // 1.0
 	f.importedBy["src/a.go"] = []string{"src/b.go"}
-	f.tests["src/b.go"] = []recon.TestFile{{Path: "aaa_test.go"}}     // 0.8
+	f.tests["src/b.go"] = []recon.TestFile{{Path: "aaa_test.go"}} // 0.8
 
 	res, _ := Select(f, []string{"src/a.go"}, DefaultOptions())
 	if len(res.Tests) < 2 {
