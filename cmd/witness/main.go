@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"runtime/debug"
 
@@ -14,6 +16,13 @@ var version = "dev"
 func main() {
 	cmd := cli.NewRootCmd(resolveVersion())
 	if err := cmd.Execute(); err != nil {
+		// `witness run` reports the test runner's exit code this way so we can
+		// exit with it (the command can't call os.Exit — see ExitCodeError).
+		var ce *cli.ExitCodeError
+		if errors.As(err, &ce) {
+			os.Exit(ce.Code)
+		}
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

@@ -13,12 +13,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ExitCodeError carries a test-runner exit code out of `run` so the standalone
+// main() can exit with it. The command itself must NOT call os.Exit: witness is
+// embedded in-process by other tools (e.g. Rivet), where os.Exit would kill the
+// host. main() translates this into os.Exit; embedded callers see a normal
+// non-nil error.
+type ExitCodeError struct{ Code int }
+
+func (e *ExitCodeError) Error() string { return fmt.Sprintf("tests failed (exit code %d)", e.Code) }
+
 // NewRootCmd creates the witness CLI command tree.
 func NewRootCmd(version string) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "witness",
 		Short: "Test selector — find which tests to run for changed files",
 		Long:  "Witness maps code changes to relevant tests using dependency analysis, co-change history, and hotspot scoring.",
+		// run returns ExitCodeError to pass the runner's code up; don't let
+		// cobra print it or dump usage for a plain test failure.
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 
 	root.Version = version
@@ -179,8 +192,10 @@ CI or a pre-commit hook directly. With no files, uses git diff like 'select'.`,
 			}
 			defer r.Close()
 
+			out, errOut := cmd.OutOrStdout(), cmd.ErrOrStderr()
+
 			if len(changedFiles) == 0 {
-				fmt.Fprintln(os.Stderr, "No changed files detected; nothing to run.")
+				fmt.Fprintln(errOut, "No changed files detected; nothing to run.")
 				return nil
 			}
 
@@ -189,20 +204,22 @@ CI or a pre-commit hook directly. With no files, uses git diff like 'select'.`,
 				return err
 			}
 			if len(result.Tests) == 0 {
-				fmt.Fprintln(os.Stderr, "No relevant tests selected; nothing to run.")
+				fmt.Fprintln(errOut, "No relevant tests selected; nothing to run.")
 				return nil
 			}
 
 			command := commandFor(r, result)
-			fmt.Fprintf(os.Stderr, "witness: running %d test target(s)\n  $ %s\n\n", len(result.Tests), command)
+			fmt.Fprintf(errOut, "witness: running %d test target(s)\n  $ %s\n\n", len(result.Tests), command)
 
-			code, err := runner.Execute(command, root, os.Stdout, os.Stderr)
+			// Write through the command's writers so embedded callers capture
+			// output instead of it leaking to the host's stdout.
+			code, err := runner.Execute(command, root, out, errOut)
 			if err != nil {
 				return err
 			}
-			// Close recon before exiting with the runner's code (os.Exit skips defers).
-			r.Close()
-			os.Exit(code)
+			if code != 0 {
+				return &ExitCodeError{Code: code}
+			}
 			return nil
 		},
 	}
