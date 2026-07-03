@@ -131,7 +131,7 @@ If no files are provided, uses git diff to detect changes.
 Output formats:
   json   — structured JSON with scores and signals (default)
   paths  — one test path per line
-  exec   — test runner command (auto-detected: mix test, go test, etc.)`,
+  exec   — test runner command (auto-detected: mix test, go test, dotnet test, etc.)`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r, _, changedFiles, err := sf.resolve(args)
 			if err != nil {
@@ -182,7 +182,7 @@ func newRunCmd() *cobra.Command {
 		Short: "Select tests and run them",
 		Long: `Select the relevant tests for the changed files and execute them.
 
-Detects the test runner from the project (go test, mix test, pytest, ...),
+Detects the test runner from the project (go test, mix test, pytest, dotnet test, ...),
 streams its output, and exits with the runner's exit code — so it drops into
 CI or a pre-commit hook directly. With no files, uses git diff like 'select'.`,
 		RunE: func(cmd *cobra.Command, args []string) error {

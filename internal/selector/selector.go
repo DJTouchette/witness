@@ -45,7 +45,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 
 	for _, changed := range changedFiles {
 		// Step 1: If the changed file IS a test, include it directly.
-		if r.IsTestFile(changed) {
+		if isSelectableTest(r, changed) {
 			addCandidate(candidates, changed, 1.0, "changed-test", changed, "")
 			continue
 		}
@@ -53,7 +53,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 		// Step 2: Direct test matches via TestMap.
 		tests, _ := r.Tests(changed, -1)
 		for _, t := range tests {
-			addCandidate(candidates, t.Path, 1.0, "direct-test", changed, t.Kind)
+			addTestCandidate(r, candidates, t.Path, 1.0, "direct-test", changed, t.Kind)
 		}
 
 		// Step 3: Reverse dependency BFS.
@@ -78,12 +78,12 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 					visited[imp] = true
 					next = append(next, imp)
 
-					if r.IsTestFile(imp) {
+					if isSelectableTest(r, imp) {
 						addCandidate(candidates, imp, score, signal, changed, "")
 					} else {
 						impTests, _ := r.Tests(imp, -1)
 						for _, t := range impTests {
-							addCandidate(candidates, t.Path, score, signal, changed, t.Kind)
+							addTestCandidate(r, candidates, t.Path, score, signal, changed, t.Kind)
 						}
 					}
 				}
@@ -95,12 +95,12 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 		cochanged := r.CoChangedWith(changed, opts.CoChangeMinCount)
 		for _, pair := range cochanged {
 			score := cochangeScore(pair.Count)
-			if r.IsTestFile(pair.File) {
+			if isSelectableTest(r, pair.File) {
 				addCandidate(candidates, pair.File, score, "co-change", changed, "")
 			} else {
 				pairTests, _ := r.Tests(pair.File, -1)
 				for _, t := range pairTests {
-					addCandidate(candidates, t.Path, score, "co-change", changed, t.Kind)
+					addTestCandidate(r, candidates, t.Path, score, "co-change", changed, t.Kind)
 				}
 			}
 		}
@@ -162,6 +162,13 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 	}, nil
 }
 
+func addTestCandidate(r RepoIntel, m map[string]*ScoredTest, path string, score float64, signal, forFile, kind string) {
+	if !isSelectableTest(r, path) {
+		return
+	}
+	addCandidate(m, path, score, signal, forFile, kind)
+}
+
 func addCandidate(m map[string]*ScoredTest, path string, score float64, signal, forFile, kind string) {
 	if c, ok := m[path]; ok {
 		// Use max score.
@@ -188,6 +195,79 @@ func addCandidate(m map[string]*ScoredTest, path string, score float64, signal, 
 			ForFiles: forFiles,
 		}
 	}
+}
+
+func isSelectableTest(r RepoIntel, path string) bool {
+	if isProjectMetadataPath(path) {
+		return false
+	}
+	if isConventionalTestPath(path) {
+		return true
+	}
+	if isCSharpPath(path) {
+		// C# domains commonly use singular nouns like LabTest.cs. Recon v0.8
+		// marks any *Test.cs as a test, so require explicit test context for
+		// singular names and let *Tests.cs pass through conventionally above.
+		return false
+	}
+	return r.IsTestFile(path)
+}
+
+func isProjectMetadataPath(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".csproj", ".fsproj", ".vbproj", ".sln", ".props", ".targets":
+		return true
+	default:
+		return false
+	}
+}
+
+func isConventionalTestPath(path string) bool {
+	p := strings.ToLower(filepath.ToSlash(path))
+	ext := strings.ToLower(filepath.Ext(p))
+	name := strings.TrimSuffix(filepath.Base(p), ext)
+	switch ext {
+	case ".go", ".exs", ".rs", ".dart":
+		return strings.HasSuffix(name, "_test")
+	case ".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts":
+		return strings.HasSuffix(name, ".test") || strings.HasSuffix(name, ".spec") || hasTestPathContext(p)
+	case ".py":
+		return strings.HasPrefix(name, "test_") || strings.HasSuffix(name, "_test") || hasTestPathContext(p)
+	case ".rb":
+		return strings.HasSuffix(name, "_spec") || strings.HasSuffix(name, "_test") || hasTestPathContext(p)
+	case ".cs":
+		return strings.HasSuffix(name, "tests") || hasTestPathContext(p)
+	case ".java":
+		return strings.HasSuffix(name, "test") || strings.HasSuffix(name, "tests") || strings.HasSuffix(name, "it") || hasTestPathContext(p)
+	case ".kt", ".kts", ".swift":
+		return strings.HasSuffix(name, "test") || strings.HasSuffix(name, "tests") || hasTestPathContext(p)
+	case ".php":
+		return strings.HasSuffix(name, "test") || hasTestPathContext(p)
+	case ".scala":
+		return strings.HasSuffix(name, "spec") || strings.HasSuffix(name, "test") ||
+			strings.HasSuffix(name, "tests") || strings.HasSuffix(name, "suite") || hasTestPathContext(p)
+	default:
+		return false
+	}
+}
+
+func isCSharpPath(path string) bool {
+	return strings.EqualFold(filepath.Ext(path), ".cs")
+}
+
+func hasTestPathContext(p string) bool {
+	for _, seg := range strings.Split(p, "/") {
+		switch seg {
+		case "__tests__", "test", "tests", "spec", "specs":
+			return true
+		}
+		if strings.HasSuffix(seg, ".tests") || strings.HasSuffix(seg, ".test") ||
+			strings.HasSuffix(seg, ".integrationtests") || strings.HasSuffix(seg, ".unittests") ||
+			strings.HasSuffix(seg, ".e2e") || strings.HasSuffix(seg, ".e2etests") {
+			return true
+		}
+	}
+	return false
 }
 
 func addSignal(c *ScoredTest, signal string) {

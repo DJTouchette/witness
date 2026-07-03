@@ -12,7 +12,7 @@ Witness is the test-selection layer of the [Rivet](https://github.com/djtouchett
 - Scores by distance: **direct test (1.0) > 1-hop import (0.8) > 2-hop (0.5) > 3+-hop (0.3) > co-change pattern**
 - Boosts tests that touch hotspot (high-risk) code
 - Stops traversing at high-fan-out boundaries (>100 importers) so a shared utility doesn't drag in your entire suite
-- Knows how to run **Go, Elixir, Python, Ruby, Node, and Rust** test frameworks
+- Knows how to run **Go, Elixir, Python, Ruby, Node, Rust, and .NET/C#** test frameworks
 - Auto-detects changes from git (working tree, staged, or since a ref) when you don't pass files
 
 ## Quick Start
@@ -41,7 +41,7 @@ witness select [files...]   # print the selected tests (json / paths / exec)
 witness run    [files...]   # select and execute them, exiting with their code
 ```
 
-If no files are given, witness detects changes from `git diff`. `select` output is JSON by default, with per-test scores and the signals that selected each one. `run` detects the test runner (go test, mix test, pytest, ...), streams its output, and exits with the runner's exit code — so it drops straight into a pre-commit hook or CI step.
+If no files are given, witness detects changes from `git diff`. `select` output is JSON by default, with per-test scores and the signals that selected each one. `run` detects the test runner (go test, mix test, pytest, dotnet test, ...), streams its output, and exits with the runner's exit code — so it drops straight into a pre-commit hook or CI step.
 
 ### Flags
 

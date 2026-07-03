@@ -174,6 +174,32 @@ func TestSelect_CoChange(t *testing.T) {
 	}
 }
 
+func TestSelect_CSharpSingularTestDomainModelIsNotATest(t *testing.T) {
+	f := newFake()
+	f.cochange["src/certificates/CertificateOrchestrationService.cs"] = []recon.CoChangePair{
+		{File: "src/Domains/Leroy.Certificates/Models/LabTest.cs", Count: 10},
+		{File: "backend/tests/Leroy.Platform.Tests/CertificateOrchestrationServiceTests.cs", Count: 10},
+		{File: "backend/tests/Leroy.Platform.Tests/Leroy.Platform.Tests.csproj", Count: 10},
+	}
+	// Simulate overly broad upstream classification: these paths are reported
+	// as tests, but only the .cs file in the .Tests project should survive.
+	f.testFiles["src/Domains/Leroy.Certificates/Models/LabTest.cs"] = true
+	f.testFiles["backend/tests/Leroy.Platform.Tests/CertificateOrchestrationServiceTests.cs"] = true
+	f.testFiles["backend/tests/Leroy.Platform.Tests/Leroy.Platform.Tests.csproj"] = true
+
+	res, _ := Select(f, []string{"src/certificates/CertificateOrchestrationService.cs"}, DefaultOptions())
+	got := byPath(res)
+	if _, ok := got["src/Domains/Leroy.Certificates/Models/LabTest.cs"]; ok {
+		t.Fatalf("singular C# domain model should not be selected as a test: %+v", res.Tests)
+	}
+	if _, ok := got["backend/tests/Leroy.Platform.Tests/CertificateOrchestrationServiceTests.cs"]; !ok {
+		t.Fatalf("C# test project file should still be selected: %+v", res.Tests)
+	}
+	if _, ok := got["backend/tests/Leroy.Platform.Tests/Leroy.Platform.Tests.csproj"]; ok {
+		t.Fatalf("C# project metadata should not be selected as a test: %+v", res.Tests)
+	}
+}
+
 func TestSelect_HotspotBoost(t *testing.T) {
 	f := newFake()
 	f.importedBy["src/a.go"] = []string{"src/b.go"}

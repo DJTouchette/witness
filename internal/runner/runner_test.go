@@ -16,6 +16,11 @@ func TestFormatCommand(t *testing.T) {
 		{"ruby", []string{"spec/a_spec.rb"}, "bundle exec rspec spec/a_spec.rb"},
 		{"node", []string{"src/a.test.ts"}, "npx jest src/a.test.ts"},
 		{"rust", []string{"tests/a.rs"}, "cargo test tests/a.rs"},
+		{"csharp", []string{
+			"backend/tests/Leroy.Platform.Tests/CertificateTests.cs",
+			"backend/tests/Leroy.Platform.Tests/OtherTests.cs",
+			"backend/tests/Leroy.Api.IntegrationTests/CertificatesApiTests.cs",
+		}, "dotnet test ./backend/tests/Leroy.Api.IntegrationTests && dotnet test ./backend/tests/Leroy.Platform.Tests"},
 		{"", nil, ""},
 	}
 
@@ -36,6 +41,9 @@ func TestDetectFramework(t *testing.T) {
 		{[]string{"Rails"}, "ruby"},
 		{[]string{"React", "Express"}, "node"},
 		{[]string{"Django"}, "python"},
+		{[]string{"Microsoft.NET.Test.Sdk"}, "dotnet"},
+		{[]string{"ASP.NET Core"}, "dotnet"},
+		{[]string{"xunit"}, "dotnet"},
 		{[]string{"unknown"}, ""},
 		{nil, ""},
 	}

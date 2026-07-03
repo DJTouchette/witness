@@ -2,6 +2,7 @@ package runner
 
 import (
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -24,6 +25,8 @@ func FormatCommand(framework string, testPaths []string) string {
 		return "npx jest " + strings.Join(testPaths, " ")
 	case "rust":
 		return "cargo test " + strings.Join(testPaths, " ")
+	case "csharp", "c#", ".net", "dotnet", "asp.net core", "xunit", "nunit", "mstest":
+		return formatDotNetProjects(testPaths)
 	default:
 		// Generic fallback: just list the paths.
 		return strings.Join(testPaths, " ")
@@ -35,6 +38,10 @@ func DetectFramework(frameworks []string) string {
 	for _, f := range frameworks {
 		lower := strings.ToLower(f)
 		switch {
+		case strings.Contains(lower, "asp.net") || strings.Contains(lower, ".net") ||
+			strings.Contains(lower, "xunit") || strings.Contains(lower, "nunit") ||
+			strings.Contains(lower, "mstest"):
+			return "dotnet"
 		case strings.Contains(lower, "phoenix"):
 			return "elixir"
 		case strings.Contains(lower, "gin") || strings.Contains(lower, "echo") || strings.Contains(lower, "fiber"):
@@ -62,4 +69,54 @@ func formatGoPackages(paths []string) string {
 		result = append(result, pkg)
 	}
 	return strings.Join(result, " ")
+}
+
+func formatDotNetProjects(paths []string) string {
+	projectDirs := make(map[string]bool)
+	for _, p := range paths {
+		dir := dotNetProjectDir(p)
+		if dir == "." || dir == "" {
+			continue
+		}
+		projectDirs["./"+filepath.ToSlash(dir)] = true
+	}
+	if len(projectDirs) == 0 {
+		return "dotnet test"
+	}
+
+	var targets []string
+	for dir := range projectDirs {
+		targets = append(targets, dir)
+	}
+	sort.Strings(targets)
+
+	commands := make([]string, 0, len(targets))
+	for _, target := range targets {
+		commands = append(commands, "dotnet test "+target)
+	}
+	return strings.Join(commands, " && ")
+}
+
+func dotNetProjectDir(path string) string {
+	p := filepath.ToSlash(filepath.Clean(path))
+	parts := strings.Split(p, "/")
+	for i, part := range parts[:len(parts)-1] {
+		lower := strings.ToLower(part)
+		switch {
+		case strings.HasSuffix(lower, ".tests"),
+			strings.HasSuffix(lower, ".test"),
+			strings.HasSuffix(lower, ".integrationtests"),
+			strings.HasSuffix(lower, ".unittests"),
+			strings.HasSuffix(lower, ".e2etests"),
+			strings.HasSuffix(lower, ".e2e"):
+			return strings.Join(parts[:i+1], "/")
+		}
+	}
+	for i, part := range parts[:len(parts)-1] {
+		lower := strings.ToLower(part)
+		if lower == "test" || lower == "tests" {
+			return strings.Join(parts[:i+1], "/")
+		}
+	}
+	return filepath.Dir(p)
 }
