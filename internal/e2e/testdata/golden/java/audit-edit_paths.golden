@@ -1,0 +1,9 @@
+$ witness select --format paths
+exit 1
+--- stdout ---
+(empty)
+--- stderr ---
+witness: no test covers any of the 1 changed file(s): src/main/java/com/example/Audit.java
+witness: cannot prove the selection is complete; falling back to the full suite (--fallback=none to disable)
+--- error ---
+witness cannot prove the selection is complete and --format paths cannot express the full-suite fallback; use --format exec (it prints the whole-suite command) or --fallback=none to accept the partial list: no test covers any of the 1 changed file(s): src/main/java/com/example/Audit.java

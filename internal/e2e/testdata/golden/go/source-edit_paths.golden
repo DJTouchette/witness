@@ -1,0 +1,6 @@
+$ witness select --format paths
+exit 0
+--- stdout ---
+calc/calc_test.go
+--- stderr ---
+(empty)

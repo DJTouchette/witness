@@ -1,0 +1,19 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "src/main/java/com/example/Audit.java"
+  ],
+  "tests": [],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 0,
+    "by_signal": {},
+    "unmapped": [
+      "src/main/java/com/example/Audit.java"
+    ]
+  }
+}
+--- stderr ---
+witness: no test covers any of the 1 changed file(s): src/main/java/com/example/Audit.java

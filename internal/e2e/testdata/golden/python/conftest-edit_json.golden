@@ -1,0 +1,30 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "tests/conftest.py"
+  ],
+  "tests": [
+    {
+      "path": "tests/test_api.py",
+      "score": 0.3,
+      "signals": [
+        "co-change"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "tests/conftest.py"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 1,
+    "by_signal": {
+      "co-change": 1
+    }
+  }
+}
+--- stderr ---
+(empty)

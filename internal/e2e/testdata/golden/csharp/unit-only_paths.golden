@@ -1,0 +1,6 @@
+$ witness select --format paths --kind unit
+exit 0
+--- stdout ---
+tests/Orders.UnitTests/CalculatorTests.cs
+--- stderr ---
+(empty)

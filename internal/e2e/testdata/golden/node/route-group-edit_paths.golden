@@ -1,0 +1,6 @@
+$ witness select --format paths
+exit 0
+--- stdout ---
+src/app/(marketing)/page.test.js
+--- stderr ---
+(empty)

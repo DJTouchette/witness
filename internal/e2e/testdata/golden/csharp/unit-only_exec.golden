@@ -1,0 +1,6 @@
+$ witness select --format exec --kind unit
+exit 0
+--- stdout ---
+dotnet test ./tests/Orders.UnitTests
+--- stderr ---
+(empty)

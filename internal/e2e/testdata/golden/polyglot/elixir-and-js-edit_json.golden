@@ -1,0 +1,45 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "assets/js/cart.js",
+    "lib/shop/cart.ex"
+  ],
+  "tests": [
+    {
+      "path": "assets/js/__tests__/cart.test.js",
+      "score": 1,
+      "signals": [
+        "direct-test",
+        "import-1hop"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "assets/js/cart.js"
+      ]
+    },
+    {
+      "path": "test/shop/cart_test.exs",
+      "score": 1,
+      "signals": [
+        "direct-test",
+        "import-1hop"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "lib/shop/cart.ex"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 2,
+    "tests_selected": 2,
+    "by_signal": {
+      "direct-test": 2,
+      "import-1hop": 2
+    }
+  }
+}
+--- stderr ---
+(empty)

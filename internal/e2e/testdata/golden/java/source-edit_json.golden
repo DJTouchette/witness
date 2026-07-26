@@ -1,0 +1,30 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "src/main/java/com/example/Calculator.java"
+  ],
+  "tests": [
+    {
+      "path": "src/test/java/com/example/CalculatorTest.java",
+      "score": 1,
+      "signals": [
+        "direct-test"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "src/main/java/com/example/Calculator.java"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 1,
+    "by_signal": {
+      "direct-test": 1
+    }
+  }
+}
+--- stderr ---
+(empty)

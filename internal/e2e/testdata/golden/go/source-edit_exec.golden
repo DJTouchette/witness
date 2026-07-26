@@ -1,0 +1,6 @@
+$ witness select --format exec
+exit 0
+--- stdout ---
+go test ./calc/...
+--- stderr ---
+(empty)

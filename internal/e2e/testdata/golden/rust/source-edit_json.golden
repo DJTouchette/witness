@@ -1,0 +1,30 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "src/orders.rs"
+  ],
+  "tests": [
+    {
+      "path": "tests/orders_test.rs",
+      "score": 1,
+      "signals": [
+        "direct-test"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "src/orders.rs"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 1,
+    "by_signal": {
+      "direct-test": 1
+    }
+  }
+}
+--- stderr ---
+(empty)

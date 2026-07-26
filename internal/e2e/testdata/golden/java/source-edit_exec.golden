@@ -1,0 +1,6 @@
+$ witness select --format exec
+exit 0
+--- stdout ---
+mvn test -Dtest=CalculatorTest
+--- stderr ---
+(empty)

@@ -1,0 +1,6 @@
+$ witness select --format exec
+exit 0
+--- stdout ---
+cargo test --test orders_test
+--- stderr ---
+(empty)

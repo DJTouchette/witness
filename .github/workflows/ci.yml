@@ -23,10 +23,23 @@ jobs:
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
 
       - name: Build
-        run: go build ./cmd/witness
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # Called out before the full run, and named, because these are the only
+      # tests that drive the real binary against real repositories: when one of
+      # them goes red, witness has started reporting a selection it cannot
+      # back up, and that should be obvious from the job list alone. `go test
+      # ./...` below runs them again as part of the suite.
+      - name: End-to-end golden tests
+        run: go test ./internal/e2e -count=1
 
       - name: Test
         run: go test ./... -count=1
 
-      - name: Vet
-        run: go vet ./...
+      # Separate pass: the plain run above still gates the build if the race
+      # detector trips on something unrelated to correctness.
+      - name: Test (race)
+        run: go test -race ./... -count=1

@@ -1,4 +1,9 @@
+# compiled binary (`make build` writes ./witness)
 /witness
+
+# recon's on-disk analysis cache: recon defaults to <root>/.recon/, and
+# .witness/ only exists when --cache-dir is pointed there.
+.recon/
 .witness/
 
 # goreleaser build output

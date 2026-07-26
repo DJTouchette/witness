@@ -1,0 +1,7 @@
+$ witness select --format paths
+exit 0
+--- stdout ---
+tests/Orders.UnitTests/CalculatorTests.cs
+tests/Orders.IntegrationTests/CheckoutFlowTests.cs
+--- stderr ---
+(empty)

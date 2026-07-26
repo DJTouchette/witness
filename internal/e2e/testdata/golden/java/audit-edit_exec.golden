@@ -1,0 +1,7 @@
+$ witness select --format exec
+exit 0
+--- stdout ---
+mvn test
+--- stderr ---
+witness: no test covers any of the 1 changed file(s): src/main/java/com/example/Audit.java
+witness: cannot prove the selection is complete; falling back to the full suite (--fallback=none to disable)

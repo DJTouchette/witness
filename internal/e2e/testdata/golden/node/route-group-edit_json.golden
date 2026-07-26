@@ -1,0 +1,32 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "src/app/(marketing)/page.js"
+  ],
+  "tests": [
+    {
+      "path": "src/app/(marketing)/page.test.js",
+      "score": 1,
+      "signals": [
+        "direct-test",
+        "import-1hop"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "src/app/(marketing)/page.js"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 1,
+    "by_signal": {
+      "direct-test": 1,
+      "import-1hop": 1
+    }
+  }
+}
+--- stderr ---
+(empty)

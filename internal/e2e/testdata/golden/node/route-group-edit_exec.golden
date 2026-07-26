@@ -1,0 +1,6 @@
+$ witness select --format exec
+exit 0
+--- stdout ---
+npx jest --runTestsByPath 'src/app/(marketing)/page.test.js'
+--- stderr ---
+(empty)

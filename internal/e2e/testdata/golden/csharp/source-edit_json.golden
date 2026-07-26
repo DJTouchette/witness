@@ -1,0 +1,45 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "src/Orders/Calculator.cs"
+  ],
+  "tests": [
+    {
+      "path": "tests/Orders.UnitTests/CalculatorTests.cs",
+      "score": 1,
+      "signals": [
+        "direct-test",
+        "import-1hop"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "src/Orders/Calculator.cs"
+      ]
+    },
+    {
+      "path": "tests/Orders.IntegrationTests/CheckoutFlowTests.cs",
+      "score": 0.9,
+      "signals": [
+        "import-1hop",
+        "hotspot-risk"
+      ],
+      "kind": "integration",
+      "for_files": [
+        "src/Orders/Calculator.cs"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 2,
+    "by_signal": {
+      "direct-test": 1,
+      "hotspot-risk": 1,
+      "import-1hop": 2
+    }
+  }
+}
+--- stderr ---
+(empty)

@@ -1,0 +1,6 @@
+$ witness select --format exec --test-cmd gotestsum --
+exit 0
+--- stdout ---
+gotestsum -- ./calc/...
+--- stderr ---
+(empty)

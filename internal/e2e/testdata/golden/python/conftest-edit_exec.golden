@@ -1,0 +1,6 @@
+$ witness select --format exec
+exit 0
+--- stdout ---
+pytest tests/test_api.py
+--- stderr ---
+(empty)

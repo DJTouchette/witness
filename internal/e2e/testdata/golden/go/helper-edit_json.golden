@@ -1,0 +1,32 @@
+$ witness select --format json
+exit 0
+--- stdout ---
+{
+  "changed_files": [
+    "internal/mathx/mathx.go"
+  ],
+  "tests": [
+    {
+      "path": "calc/calc_test.go",
+      "score": 0.9,
+      "signals": [
+        "import-1hop",
+        "hotspot-risk"
+      ],
+      "kind": "unit",
+      "for_files": [
+        "internal/mathx/mathx.go"
+      ]
+    }
+  ],
+  "summary": {
+    "changed": 1,
+    "tests_selected": 1,
+    "by_signal": {
+      "hotspot-risk": 1,
+      "import-1hop": 1
+    }
+  }
+}
+--- stderr ---
+(empty)
