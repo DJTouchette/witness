@@ -1,0 +1,166 @@
+[
+  {
+    "name": "Workspacer native inline tests",
+    "root": "worky/workspacer",
+    "files": [
+      "apps/native/src/ui.rs"
+    ],
+    "expected_tests": [
+      "apps/native/src/ui.rs"
+    ],
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./apps/native/Cargo.toml"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Leroy billing project references",
+    "root": "Leroy",
+    "files": [
+      "backend/src/Domains/Leroy.Billing/LocalBillingService.cs"
+    ],
+    "expected_tests": [
+      "backend/tests/Leroy.Billing.Tests/LocalBillingServiceTests.cs"
+    ],
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Billing.Tests/Leroy.Billing.Tests.csproj"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Cassadol web Vitest",
+    "root": "cassadol",
+    "files": [
+      "clients/web/src/util/navigationHistoryUtil.ts"
+    ],
+    "expected_tests": [
+      "clients/web/src/util/navigationHistoryUtil.test.ts"
+    ],
+    "expected_commands": [
+      {
+        "cwd": "clients/web",
+        "argv": [
+          "yarn",
+          "run",
+          "vitest",
+          "run",
+          "--environment=jsdom"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Cassadol C# DataLayer backend",
+    "root": "cassadol",
+    "files": [
+      "backend/Handlers/DataLayer/src/DataLayer/App.cs"
+    ],
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Cassadol C# plus Vitest",
+    "root": "cassadol",
+    "files": [
+      "backend/Handlers/DataLayer/src/DataLayer/App.cs",
+      "clients/web/src/util/navigationHistoryUtil.ts"
+    ],
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": "clients/web",
+        "argv": [
+          "yarn",
+          "run",
+          "vitest",
+          "run",
+          "--environment=jsdom"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Workspacer renderer Vitest",
+    "root": "worky/workspacer",
+    "files": [
+      "apps/desktop/src/renderer/src/backend/webBackend.ts"
+    ],
+    "expected_tests": [
+      "apps/desktop/src/renderer/src/backend/snapshotFold.test.ts"
+    ],
+    "expected_commands": [
+      {
+        "cwd": "apps/desktop/src/renderer",
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "vitest",
+          "run"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Workspacer Rust plus renderer Vitest",
+    "root": "worky/workspacer",
+    "files": [
+      "apps/native/src/ui.rs",
+      "apps/desktop/src/renderer/src/backend/webBackend.ts"
+    ],
+    "expected_tests": [
+      "apps/desktop/src/renderer/src/backend/snapshotFold.test.ts"
+    ],
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./apps/native/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": "apps/desktop/src/renderer",
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "vitest",
+          "run"
+        ]
+      }
+    ]
+  }
+]

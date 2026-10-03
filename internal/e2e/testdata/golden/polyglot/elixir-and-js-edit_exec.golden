@@ -1,7 +1,7 @@
 $ witness select --format exec
 exit 0
 --- stdout ---
-mix test test/shop/cart_test.exs
-npx jest --runTestsByPath assets/js/__tests__/cart.test.js
+mix test
+npm exec --no -- jest --watch=false
 --- stderr ---
 (empty)

@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -47,6 +48,13 @@ func ExecuteContext(ctx context.Context, command Command, dir string, stdout, st
 
 	cmd := exec.CommandContext(ctx, command.Argv[0], command.Argv[1:]...)
 	cmd.Dir = dir
+	if command.Cwd != "" && command.Cwd != "." {
+		resolved, ok := repoFile(dir, command.Cwd)
+		if !ok {
+			return -1, fmt.Errorf("command cwd escapes repository: %s", command.Cwd)
+		}
+		cmd.Dir = filepath.Clean(resolved)
+	}
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	// Own process group: cancellation can then signal the runner and every

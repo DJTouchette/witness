@@ -75,6 +75,7 @@ func TestTestsFailedRecoversTheRunnerExitCode(t *testing.T) {
 // The alias must stay an alias: a distinct type would silently stop matching the
 // error the cli package actually returns, which is the whole point of exporting it.
 func TestExitCodeErrorIsTheSameTypeTheCLIReturns(t *testing.T) {
+	t.Chdir(t.TempDir())
 	var out bytes.Buffer
 	cmd := NewCommand("v9.9.9")
 	cmd.SetOut(&out)

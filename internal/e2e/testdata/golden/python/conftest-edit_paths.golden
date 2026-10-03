@@ -3,4 +3,4 @@ exit 0
 --- stdout ---
 tests/test_api.py
 --- stderr ---
-(empty)
+witness: 1 changed file(s) covered by no selected test: tests/conftest.py

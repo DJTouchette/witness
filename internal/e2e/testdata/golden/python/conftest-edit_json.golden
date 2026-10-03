@@ -23,8 +23,11 @@ exit 0
     "tests_selected": 1,
     "by_signal": {
       "co-change": 1
-    }
+    },
+    "unmapped": [
+      "tests/conftest.py"
+    ]
   }
 }
 --- stderr ---
-(empty)
+witness: 1 changed file(s) covered by no selected test: tests/conftest.py

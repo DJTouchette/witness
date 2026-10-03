@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Witness suite mappings v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "suites"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "suites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "cwd", "argv"],
+        "anyOf": [{"required": ["paths"]}, {"required": ["tests"]}],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "paths": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "tests": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "exclude": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "cwd": {"type": "string", "minLength": 1},
+          "argv": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[^\\u0000\\r\\n]*$"}},
+          "fallback": {"enum": ["suite", "fail"]}
+        }
+      }
+    }
+  }
+}

@@ -15,6 +15,7 @@ import (
 
 	"github.com/djtouchette/recon/pkg/recon"
 	"github.com/djtouchette/witness/internal/gitdiff"
+	"github.com/djtouchette/witness/internal/planner"
 	"github.com/djtouchette/witness/internal/runner"
 	"github.com/djtouchette/witness/internal/selector"
 	"github.com/spf13/cobra"
@@ -35,9 +36,10 @@ const (
 	formatJSON  = "json"
 	formatPaths = "paths"
 	formatExec  = "exec"
+	formatPlan  = "plan"
 )
 
-var outputFormats = []string{formatJSON, formatPaths, formatExec}
+var outputFormats = []string{formatJSON, formatPaths, formatExec, formatPlan}
 
 // Fallback policies for a selection witness cannot prove is complete — see
 // unprovenReasons for what "cannot prove" means.
@@ -70,7 +72,7 @@ func NewRootCmd(version string) *cobra.Command {
 	}
 
 	root.Version = version
-	root.AddCommand(newSelectCmd(), newRunCmd())
+	root.AddCommand(newSelectCmd(), newRunCmd(), newAuditCmd())
 
 	return root
 }
@@ -325,7 +327,9 @@ Output formats:
 				fmt.Fprintln(errOut, "No changed files detected.")
 			}
 
-			result, err := selector.Select(r, changedPaths(changes), sf.options())
+			opts := sf.options()
+			opts.Root = root
+			result, err := selector.Select(r, changedPaths(changes), opts)
 			if err != nil {
 				return err
 			}
@@ -345,6 +349,18 @@ Output formats:
 				return enc.Encode(result)
 			}
 
+			if format == formatPlan {
+				if sf.testCmd != "" || len(passthrough) > 0 {
+					return fmt.Errorf("--format plan does not accept runner overrides/passthrough; use .witness.json suite mappings")
+				}
+				plan, planErr := planner.Build(root, result)
+				enc := json.NewEncoder(out)
+				enc.SetIndent("", "  ")
+				if err := enc.Encode(plan); err != nil {
+					return err
+				}
+				return planErr
+			}
 			useFull, err := applyFallback(errOut, sf.fallback, gaps)
 			if err != nil {
 				return err
@@ -381,7 +397,7 @@ Output formats:
 	}
 
 	sf.bind(cmd)
-	cmd.Flags().StringVar(&format, "format", formatJSON, "output format: json, paths, exec")
+	cmd.Flags().StringVar(&format, "format", formatJSON, "output format: json, paths, exec, plan (versioned argv/cwd; never executes)")
 	return cmd
 }
 
@@ -426,7 +442,9 @@ where a docs-only commit should not drag in every test.`,
 				return nil
 			}
 
-			result, err := selector.Select(r, changedPaths(changes), sf.options())
+			opts := sf.options()
+			opts.Root = root
+			result, err := selector.Select(r, changedPaths(changes), opts)
 			if err != nil {
 				return err
 			}
@@ -586,6 +604,10 @@ func deletedPaths(changes []gitdiff.Change) []string {
 // running every test in the repository defeats the flag they just typed.
 func unprovenReasons(result *selector.SelectResult, deleted []string, requireCoverage bool) []string {
 	var reasons []string
+	reasons = append(reasons, result.Summary.Diagnostics...)
+	if result.Summary.Truncated > 0 {
+		reasons = append(reasons, fmt.Sprintf("selection truncated by %d tests", result.Summary.Truncated))
+	}
 	if result.Summary.AnalysisError != "" {
 		reasons = append(reasons, "analysis failed: "+result.Summary.AnalysisError)
 	}
@@ -732,19 +754,16 @@ func testCommands(root string, r *recon.Recon, result *selector.SelectResult, sf
 		return cmds, nil
 	}
 
-	var cmds []runner.Command
-	var err error
-	if useFull {
-		cmds, err = runner.FullSuiteCommand(root, framework)
-	} else {
-		cmds, err = runner.FormatCommand(root, framework, paths)
+	if result.Summary.Filtered > 0 {
+		return nil, fmt.Errorf("automatic suite planning cannot honor --kind/--exclude/--signals without widening the filtered selection; review --format plan, configure an explicit suite, or use --test-cmd")
 	}
-	if err != nil {
-		// FormatCommand can return commands AND an error for a partly-runnable
-		// polyglot selection. Dropping the error and running the subset would
-		// report a pass for the languages witness skipped.
-		return nil, err
+	// Automatic commands use one shared non-executing planner, including
+	// coverage of changed files omitted by scoring, filters or index gaps.
+	plan, planErr := planner.Build(root, result)
+	if planErr != nil {
+		return nil, planErr
 	}
+	cmds := plan.Commands
 	for i := range cmds {
 		cmds[i].Argv = append(cmds[i].Argv, passthrough...)
 	}

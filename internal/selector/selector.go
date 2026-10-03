@@ -31,7 +31,7 @@ type RepoIntel interface {
 // change needs no tests" apart from "recon could not tell me", and fail closed
 // on the second.
 func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResult, error) {
-	if opts.MaxDepth <= 0 {
+	if opts.MaxDepth == 0 {
 		opts.MaxDepth = defaultMaxDepth
 	}
 	if opts.MinScore <= 0 {
@@ -61,6 +61,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 
 	normalized := make([]string, 0, len(changedFiles))
 	var notIndexed []string
+	var diagnostics []string
 	seenChanged := make(map[string]bool)
 
 	for _, raw := range changedFiles {
@@ -84,6 +85,12 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 			notIndexed = append(notIndexed, changed)
 		}
 
+		if ctx != nil && ctx.ImportStats != nil && ctx.ImportStats.Unresolved > 0 {
+			diagnostics = append(diagnostics, fmt.Sprintf("%s: %d unresolved imports", changed, ctx.ImportStats.Unresolved))
+		}
+		if inlineRustTest(opts.Root, changed) {
+			addCandidate(candidates, changed, 1.0, "inline-test", changed, "unit")
+		}
 		// Step 1: If the changed file IS a runnable test, include it directly.
 		// It does not short-circuit the rest: a changed test still has
 		// importers, co-changed tests and (for shared fixtures) dependents that
@@ -111,6 +118,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 			for _, file := range frontier {
 				importers := r.ImportedBy(file)
 				if len(importers) > opts.FanOutCap {
+					diagnostics = append(diagnostics, fmt.Sprintf("%s: import traversal capped at %d importers", file, opts.FanOutCap))
 					// Skip high-fan-out files (utilities) to avoid explosion.
 					continue
 				}
@@ -220,7 +228,12 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 			signalCounts[s]++
 		}
 		for _, f := range t.ForFiles {
-			covered[f] = true
+			// History alone can suggest a test, but cannot prove coverage.
+			for _, signal := range t.Signals {
+				if signal == "direct-test" || signal == "changed-test" || signal == "inline-test" || strings.HasPrefix(signal, "import-") {
+					covered[f] = true
+				}
+			}
 		}
 	}
 
@@ -240,6 +253,14 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 		}
 	}
 
+	if coverage, ok := r.(interface{ ParseCoverage() []recon.FileParseInfo }); ok {
+		for _, file := range coverage.ParseCoverage() {
+			if seenChanged[file.File] && canAffectTests(file.File) && file.Status != "ok" {
+				diagnostics = append(diagnostics, fmt.Sprintf("%s: parse %s (%s)", file.File, file.Status, file.Extractor))
+			}
+		}
+	}
+	sort.Strings(diagnostics)
 	summary := Summary{
 		Changed:       len(normalized),
 		TestsSelected: len(tests),
@@ -248,6 +269,7 @@ func Select(r RepoIntel, changedFiles []string, opts SelectOptions) (*SelectResu
 		NotIndexed:    notIndexed,
 		Truncated:     truncated,
 		Filtered:      filtered,
+		Diagnostics:   diagnostics,
 	}
 	if firstErr != nil {
 		summary.AnalysisError = firstErr.Error()

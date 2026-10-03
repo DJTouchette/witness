@@ -52,11 +52,14 @@ type Summary struct {
 	// AnalysisError is the first error recon returned during the walk,
 	// formatted. Select still returns a result — a partial answer beats no
 	// answer — but a caller that wants to fail closed has the reason here.
-	AnalysisError string `json:"analysis_error,omitempty"`
+	AnalysisError string   `json:"analysis_error,omitempty"`
+	Diagnostics   []string `json:"diagnostics,omitempty"`
 }
 
 // SelectOptions configures the selection algorithm.
 type SelectOptions struct {
+	// Root enables bounded source inspection for inline Rust tests.
+	Root             string
 	MaxDepth         int      // import graph traversal depth (default: 2)
 	MinScore         float64  // minimum score to include (default: 0.1)
 	MaxTests         int      // max tests to return (default: 50)

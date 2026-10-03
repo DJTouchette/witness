@@ -1,6 +1,8 @@
 $ witness select --format exec --kind unit
-exit 0
+exit 1
 --- stdout ---
-dotnet test ./tests/Orders.UnitTests
+(empty)
 --- stderr ---
 (empty)
+--- error ---
+automatic suite planning cannot honor --kind/--exclude/--signals without widening the filtered selection; review --format plan, configure an explicit suite, or use --test-cmd

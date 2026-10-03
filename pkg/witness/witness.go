@@ -11,6 +11,7 @@ import (
 
 	"github.com/djtouchette/recon/pkg/recon"
 	"github.com/djtouchette/witness/internal/gitdiff"
+	"github.com/djtouchette/witness/internal/planner"
 	"github.com/djtouchette/witness/internal/runner"
 	"github.com/djtouchette/witness/internal/selector"
 )
@@ -115,6 +116,7 @@ func DefaultOptions() SelectOptions { return selector.DefaultOptions() }
 // fallback. An empty list yields an empty result — never a working-tree diff,
 // which would silently answer a different question than the caller asked.
 func (w *Witness) selectFiles(changedFiles []string, opts SelectOptions) (*SelectResult, error) {
+	opts.Root = w.root
 	return selector.Select(w.recon, changedFiles, opts)
 }
 
@@ -154,66 +156,50 @@ func (w *Witness) SelectSince(ref string, opts SelectOptions) (*SelectResult, er
 	return w.selectFiles(files, opts)
 }
 
-// Complete reports whether the selection can be trusted as the whole answer:
-// recon analysed every changed file without error, had all of them in its
-// index, and — when nothing was selected at all — no changed file went
-// uncovered. When it is false an empty test list means "witness could not
-// tell", not "nothing needs testing", and a caller gating CI should run the
-// full suite (see FullSuiteCommand) or fail rather than pass.
-//
-// The last clause is the go.mod-bump case, and it is the reason this function
-// exists: recon indexes go.mod happily, so the first two clauses both pass
-// while no test covers the change. An embedder that trusted that answer got a
-// green build on a selection of zero tests. It mirrors the CLI's own gate
-// (cmd/witness/cli.unprovenReasons); a changed file no test covers WHILE other
-// tests were selected is not a gap, because the gate still has teeth.
+// Complete reports whether selection carries no known coverage gaps. It does
+// not claim the heuristic graph is a proof, or that any tests have executed.
 func Complete(result *SelectResult) bool {
-	return result != nil &&
-		result.Summary.AnalysisError == "" &&
-		len(result.Summary.NotIndexed) == 0 &&
-		!(len(result.Tests) == 0 && len(result.Summary.Unmapped) > 0)
+	return result != nil && len(selector.CoverageReasons(result)) == 0
 }
 
-// Commands returns the test runner invocations for a selection, one argv per
-// language, ready for exec.Command. A selection spanning several ecosystems
-// yields several commands; a language witness has no runner for is an error,
-// never a silently skipped suite.
-//
-// An empty selection returns no commands and no error.
+// Plan is the versioned command plan; no test or package manager is executed.
+type Plan = planner.Plan
+
+// Command carries argv and repository-relative cwd. Execute argv directly.
+type Command = runner.Command
+
+func (w *Witness) Plan(result *SelectResult) (*Plan, error) { return planner.Build(w.root, result) }
+
+// Commands is the legacy argv-only interface. Use Plan for cwd-aware commands;
+// this method refuses to discard a non-root working directory.
 func (w *Witness) Commands(result *SelectResult) ([][]string, error) {
-	if result == nil || len(result.Tests) == 0 {
-		return nil, nil
-	}
-	paths := make([]string, 0, len(result.Tests))
-	for _, t := range result.Tests {
-		paths = append(paths, t.Path)
-	}
-	// The root is not decoration: Maven, Gradle, sbt, SwiftPM, PHPUnit, dart and
-	// cargo-in-a-workspace need the build file that owns the tree and the type
-	// the test file declares, neither of which a path can supply. Without it
-	// those languages get an ErrNoRunner instead of a command.
-	cmds, err := runner.FormatCommand(w.root, w.framework(), paths)
+	p, err := w.Plan(result)
 	if err != nil {
 		return nil, err
 	}
-	return argvs(cmds), nil
+	for _, c := range p.Commands {
+		if c.Cwd != "" && c.Cwd != "." {
+			return nil, fmt.Errorf("Commands cannot express cwd %q; use Plan and execute argv with its cwd", c.Cwd)
+		}
+	}
+	return argvs(p.Commands), nil
 }
 
-// FullSuiteCommand returns the invocation that runs the project's entire test
-// suite — the safe answer when Complete reports the selection cannot be
-// trusted.
-//
-// It reads the repository root, because the whole-suite command is not a
-// constant for every ecosystem: `mvn test` and `gradle test` are not
-// interchangeable, `dart test` fails in a Flutter package, and
-// `vendor/bin/phpunit` runs none of a Pest project's tests. Where the root does
-// not say, this returns an error rather than a command that runs nothing.
+// FullSuitePlan plans all discovered manifests without a dominant-language guess.
+func (w *Witness) FullSuitePlan() (*Plan, error) { return planner.WholeRepository(w.root) }
+
+// FullSuiteCommand is the legacy argv-only whole-repository interface.
 func (w *Witness) FullSuiteCommand() ([][]string, error) {
-	cmds, err := runner.FullSuiteCommand(w.root, w.framework())
+	p, err := w.FullSuitePlan()
 	if err != nil {
 		return nil, err
 	}
-	return argvs(cmds), nil
+	for _, c := range p.Commands {
+		if c.Cwd != "." && c.Cwd != "" {
+			return nil, fmt.Errorf("FullSuiteCommand cannot express cwd %q; use FullSuitePlan", c.Cwd)
+		}
+	}
+	return argvs(p.Commands), nil
 }
 
 // Run executes the commands for a selection in the repository root, streaming
@@ -224,38 +210,14 @@ func (w *Witness) FullSuiteCommand() ([][]string, error) {
 // then meaningless and must not be reported as a test result. Cancelling ctx
 // stops the runner and everything it spawned.
 func (w *Witness) Run(ctx context.Context, result *SelectResult, stdout, stderr io.Writer) (int, error) {
-	cmds, err := w.Commands(result)
+	p, err := w.Plan(result)
 	if err != nil {
 		return -1, err
 	}
-	if len(cmds) == 0 {
-		return -1, fmt.Errorf("no tests selected; nothing to run")
+	if len(p.Commands) == 0 {
+		return -1, fmt.Errorf("no test commands planned; nothing to run")
 	}
-	return runner.ExecuteAll(ctx, commands(cmds), w.root, stdout, stderr)
-}
-
-// framework is recon's best guess at how this project's tests are run: the
-// primary language when witness can run it, and only then a detected framework.
-//
-// The order is what keeps FullSuiteCommand honest. Framework detection matches
-// any name containing ".net"/"xunit", so a Go repository holding one C# fixture
-// directory answered `dotnet test` — a whole-suite fallback that runs no tests
-// at all. Commands() has the selected paths to correct such a guess with;
-// FullSuiteCommand has nothing.
-func (w *Witness) framework() string {
-	overview, err := w.recon.Overview()
-	if err != nil || overview == nil {
-		return ""
-	}
-	var langs []string
-	for _, lang := range overview.Languages {
-		langs = append(langs, lang.Name)
-	}
-	var names []string
-	for _, fw := range overview.Frameworks {
-		names = append(names, fw.Name)
-	}
-	return runner.FullSuiteFramework(langs, names)
+	return runner.ExecuteAll(ctx, p.Commands, w.root, stdout, stderr)
 }
 
 // argvs strips the internal Command type off the public surface, since callers
@@ -264,15 +226,6 @@ func argvs(cmds []runner.Command) [][]string {
 	out := make([][]string, 0, len(cmds))
 	for _, c := range cmds {
 		out = append(out, c.Argv)
-	}
-	return out
-}
-
-// commands is the inverse of argvs.
-func commands(argvs [][]string) []runner.Command {
-	out := make([]runner.Command, 0, len(argvs))
-	for _, argv := range argvs {
-		out = append(out, runner.Command{Argv: argv})
 	}
 	return out
 }

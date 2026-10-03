@@ -1,7 +1,7 @@
 $ witness select --format exec
 exit 0
 --- stdout ---
-dotnet test ./tests/Orders.IntegrationTests
-dotnet test ./tests/Orders.UnitTests
+dotnet test ./tests/Orders.IntegrationTests/Orders.IntegrationTests.csproj
+dotnet test ./tests/Orders.UnitTests/Orders.UnitTests.csproj
 --- stderr ---
 (empty)

@@ -282,12 +282,12 @@ func TestComplete(t *testing.T) {
 	if Complete(&SelectResult{Summary: Summary{Unmapped: []string{"go.mod"}}}) {
 		t.Error("an empty selection with uncovered changed files is not complete")
 	}
-	// ... but an uncovered file alongside a real selection is: tests ran.
-	if !Complete(&SelectResult{
+	// A sparse selection cannot discharge an uncovered manifest change.
+	if Complete(&SelectResult{
 		Tests:   []ScoredTest{{Path: "calc_test.go"}},
 		Summary: Summary{Unmapped: []string{"go.mod"}},
 	}) {
-		t.Error("an uncovered file alongside a selection is not a gap; the gate still has teeth")
+		t.Error("an uncovered file remains a coverage gap")
 	}
 }
 

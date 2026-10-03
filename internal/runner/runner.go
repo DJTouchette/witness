@@ -67,9 +67,12 @@ func (e *NoRunnerError) Unwrap() error { return ErrNoRunner }
 // spaces, parens or shell metacharacters need no quoting and cannot inject.
 type Command struct {
 	// Argv is the program followed by its arguments. Never empty.
-	Argv []string
+	Argv []string `json:"argv"`
 	// Lang is the language group the command covers ("go", "rust", ...).
-	Lang string
+	Lang string `json:"language"`
+	// Cwd is relative to the repository root; empty means the root.
+	Cwd    string `json:"cwd"`
+	Reason string `json:"reason,omitempty"`
 }
 
 // String renders the command as a copy-pasteable shell line, quoting any
@@ -79,7 +82,11 @@ func (c Command) String() string {
 	for _, arg := range c.Argv {
 		quoted = append(quoted, shellQuote(arg))
 	}
-	return strings.Join(quoted, " ")
+	line := strings.Join(quoted, " ")
+	if c.Cwd != "" && c.Cwd != "." {
+		return "(cd " + shellQuote(c.Cwd) + " && " + line + ")"
+	}
+	return line
 }
 
 // FormatCommand builds the test runner commands for the given framework and
