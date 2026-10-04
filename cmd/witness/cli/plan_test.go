@@ -136,3 +136,42 @@ func TestMixedNoArgsAndFallbackPlan(t *testing.T) {
 		}
 	}
 }
+
+func TestMappedScriptRetainsArgvAndPassThrough(t *testing.T) {
+	root := newTestRepo(t)
+	t.Chdir(root)
+	writeFile(t, root, "package.json", `{"scripts":{"test":"node 'wrapper with spaces.js'","pretest":"node setup.js"},"devDependencies":{"vitest":"4"}}`)
+	writeFile(t, root, ".witness.json", `{"schema_version":1,"suites":[{"name":"script","paths":["src/**"],"cwd":".","argv":["npm","run","test","--"]}]}`)
+	var out bytes.Buffer
+	cmd := NewRootCmd("test")
+	cmd.SetOut(&out)
+	cmd.SetErr(&bytes.Buffer{})
+	cmd.SetArgs([]string{"select", "--format", "exec", "--cache-dir", t.TempDir(), "src/a.ts", "--", "argument with spaces"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "npm run test -- 'argument with spaces'\n" {
+		t.Fatalf("argv mangled: %q", out.String())
+	}
+}
+
+func TestAuditRequiresCoverageAndDiagnosticEvidence(t *testing.T) {
+	root := newTestRepo(t)
+	for _, want := range []string{"no validated test-suite owner", "invented diagnostic"} {
+		cases := []auditCase{{Name: "unknown", Root: root, Files: []string{"unknown.xyz"}, ExpectedStatus: "incomplete", ExpectedCoverage: "unknown", ExpectedDiagnostics: []string{want}}}
+		b, _ := json.Marshal(cases)
+		file := filepath.Join(t.TempDir(), "cases.json")
+		if err := os.WriteFile(file, b, 0644); err != nil {
+			t.Fatal(err)
+		}
+		var out bytes.Buffer
+		cmd := NewRootCmd("test")
+		cmd.SetOut(&out)
+		cmd.SetErr(&bytes.Buffer{})
+		cmd.SetArgs([]string{"audit", file})
+		err := cmd.Execute()
+		if (err == nil) != (want == "no validated test-suite owner") {
+			t.Fatalf("%s: %v %s", want, err, out.String())
+		}
+	}
+}

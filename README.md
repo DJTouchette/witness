@@ -97,7 +97,11 @@ renderer). Simple script arguments such as `vitest --environment=jsdom` are
 preserved. Several recognized configs in one directory produce one suite per runner.
 Ambiguous dependency-only runners, shell wrappers, dynamic .NET references,
 solution/props ownership and unusual manifest/configuration conventions can
-require explicit mappings. Detection does not evaluate JS config or MSBuild.
+require explicit mappings. Detection never executes JS config, MSBuild, build targets, or restore. The limited
+.NET XML collector reads literal imports, nearest Directory.Build.props/targets,
+and filename import globs; conditional literal references form a conservative
+superset. Unresolved imports/properties make coverage unknown while retaining
+known commands. See [planner limits and migration](docs/planner-corrections.md).
 External runtime services may still be needed to *run* a resolved suite.
 
 `--fallback=fail` stops an unproven selection; `full` (default) allows manifest
@@ -168,7 +172,10 @@ plan, err := w.Plan(selection) // inspect status, diagnostics, argv and cwd
 
 `Commands` preserves its `[][]string` return type, but refuses commands requiring
 a non-root cwd; migrate those callers to `Plan`. `FullSuitePlan` enumerates
-manifests instead of picking a dominant language. `FullSuiteCommand` similarly
+all potentially test-affecting files in the bounded discovery tree instead of
+picking a dominant language. All configured suites are included, even without
+matching files. Unknown owners make the plan incomplete; a Go module cannot
+hide Python or an unsupported source tree. `FullSuiteCommand` similarly
 refuses cwd loss or unresolved manifests. Whole-repository discovery may include
 example projects: prefer changed-file plans or explicit mappings. `Run` uses the
 same planner and preserves cwd, returns test failures as exit codes, and uses
@@ -184,7 +191,8 @@ make build
 witness audit audits/representative.json --root /path/to/Work
 ```
 
-`audit` checks expected selected tests, required argv/cwd and plan status for
+`audit` checks expected selected tests, required argv/cwd, command counts,
+coverage, diagnostic substrings and plan status for
 repeatable cases. It measures cold and warm planning, creates temporary indexes,
 and never executes test commands. The shipped cases cover Workspacer Rust/TS,
 Leroy .NET, and Cassadol web, C# backend and mixed changes. No project settings,
@@ -192,6 +200,8 @@ credentials, test services or live app processes are needed.
 
 The manifest walk skips hidden/dependency/build trees, does not follow symlinked
 directories, caps scanning at 200,000 entries and manifest reads at 2 MiB.
+Linked entries are accounted for without descending linked directories. A linked
+tree without a mapping is incomplete. Hidden source trees need explicit mappings.
 Failure to inspect a needed owner is visible, not an empty successful plan.
 
 Rivet consumes tagged Witness releases. A sibling commit does not update an

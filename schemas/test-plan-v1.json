@@ -2,26 +2,81 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Witness non-executing test plan v1",
   "type": "object",
-  "required": ["schema_version", "root", "status", "coverage", "selection", "commands", "diagnostics"],
+  "required": [
+    "schema_version",
+    "root",
+    "status",
+    "coverage",
+    "selection",
+    "commands",
+    "diagnostics"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "root": {"type": "string"},
-    "status": {"enum": ["ready", "incomplete", "no_changes", "no_tests"]},
-    "coverage": {"enum": ["selection", "suites", "unknown"]},
-    "selection": {"type": ["object", "null"]},
+    "schema_version": {
+      "const": 1
+    },
+    "root": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "incomplete",
+        "no_changes",
+        "no_tests"
+      ],
+      "description": "An incomplete plan can retain valid partial commands; consumers must not execute it as complete. Errors accompany incomplete API/CLI results."
+    },
+    "coverage": {
+      "enum": [
+        "selection",
+        "suites",
+        "unknown"
+      ],
+      "description": "suites means all identified owners in the documented discovery scope are accounted for, not proof of runtime test success. Unknown ownership/imports produce unknown."
+    },
+    "selection": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
     "commands": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["argv", "cwd", "language"],
+        "required": [
+          "argv",
+          "cwd",
+          "language"
+        ],
         "properties": {
-          "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-          "cwd": {"type": "string", "minLength": 1},
-          "language": {"type": "string"},
-          "reason": {"type": "string"}
+          "argv": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "cwd": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Repository-relative existing directory, physically contained after resolving symlinks. Revalidate containment at execution."
+          },
+          "language": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
         }
       }
     },
-    "diagnostics": {"type": "array", "items": {"type": "string"}}
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   }
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	witness "github.com/djtouchette/witness/pkg/witness"
@@ -21,7 +22,10 @@ type auditCase struct {
 		Cwd  string   `json:"cwd"`
 		Argv []string `json:"argv"`
 	} `json:"expected_commands"`
-	ExpectedStatus string `json:"expected_status"`
+	ExpectedStatus       string   `json:"expected_status"`
+	ExpectedCoverage     string   `json:"expected_coverage"`
+	ExpectedDiagnostics  []string `json:"expected_diagnostics"`
+	ExpectedCommandCount *int     `json:"expected_command_count"`
 }
 type auditResult struct {
 	Name     string        `json:"name"`
@@ -84,6 +88,17 @@ func newAuditCmd() *cobra.Command {
 				}
 				if p.Status != want {
 					row.Failures = append(row.Failures, "status: "+p.Status+", want "+want)
+				}
+				if c.ExpectedCoverage != "" && p.Coverage != c.ExpectedCoverage {
+					row.Failures = append(row.Failures, "coverage: "+p.Coverage+", want "+c.ExpectedCoverage)
+				}
+				if c.ExpectedCommandCount != nil && len(p.Commands) != *c.ExpectedCommandCount {
+					row.Failures = append(row.Failures, fmt.Sprintf("command count: %d, want %d", len(p.Commands), *c.ExpectedCommandCount))
+				}
+				for _, want := range c.ExpectedDiagnostics {
+					if !strings.Contains(strings.Join(p.Diagnostics, "\n"), want) {
+						row.Failures = append(row.Failures, "missing diagnostic: "+want)
+					}
 				}
 				for _, test := range c.ExpectedTests {
 					found := false

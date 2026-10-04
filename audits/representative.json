@@ -18,7 +18,10 @@
           "./apps/native/Cargo.toml"
         ]
       }
-    ]
+    ],
+    "expected_status": "ready",
+    "expected_coverage": "suites",
+    "expected_command_count": 1
   },
   {
     "name": "Leroy billing project references",
@@ -35,10 +38,85 @@
         "argv": [
           "dotnet",
           "test",
+          "./backend/tests/Leroy.Accounts.Tests/Leroy.Accounts.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Api.IntegrationTests/Leroy.Api.IntegrationTests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Authorization.Tests/Leroy.Authorization.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
           "./backend/tests/Leroy.Billing.Tests/Leroy.Billing.Tests.csproj"
         ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Contacts.Tests/Leroy.Contacts.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.DiseaseAlerts.Tests/Leroy.DiseaseAlerts.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Orchestration.Tests/Leroy.Orchestration.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Patients.Tests/Leroy.Patients.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Platform.Tests/Leroy.Platform.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Tenancy.Tests/Leroy.Tenancy.Tests.csproj"
+        ]
       }
-    ]
+    ],
+    "expected_status": "ready",
+    "expected_coverage": "suites",
+    "expected_command_count": 10
   },
   {
     "name": "Cassadol web Vitest",
@@ -60,7 +138,10 @@
           "--environment=jsdom"
         ]
       }
-    ]
+    ],
+    "expected_status": "ready",
+    "expected_coverage": "suites",
+    "expected_command_count": 1
   },
   {
     "name": "Cassadol C# DataLayer backend",
@@ -74,9 +155,160 @@
         "argv": [
           "dotnet",
           "test",
+          "./agent-benchmark/specs/Sample.Benchmark.Tests/Sample.Benchmark.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ClientValidation/test/ClientValidation.Tests/ClientValidation.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/CommissionPlanSQSProcessor/test/CommissionPlanSQSProcessor.Tests/CommissionPlanSQSProcessor.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
           "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
         ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DeadLetter/test/DeadLetter.Tests/DeadLetter.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/EmailSender/test/EmailSender.Tests/EmailSender.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/JobRunner/test/JobRunner.Tests/JobRunner.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPoller/test/LabPoller.Tests/LabPoller.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPollingProcessor/test/LabPollingProcessor.Tests/LabPollingProcessor.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OfflineUpsertRunner/test/OfflineUpsertRunner.Tests/OfflineUpsertRunner.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OrganizationDataChanged/test/OrganizationDataChanged.Tests/OrganizationDataChanged.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PaymentGateway/test/PaymentGateway.Tests/PaymentGateway.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PublicController/test/PublicController.Tests/PublicController.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/Quickbooks/test/Quickbooks.Tests/Quickbooks.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SQSRunner/test/SQSRunner.Tests/SQSRunner.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SignUp/test/SignUp.Tests/SignUp.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/StatementSender/test/StatmentSender.Tests/StatementSender.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SubscriptionManager/test/SubscriptionManager.Tests/SubscriptionManager.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ThirdPartySender/test/ThirdPartySender.Tests/ThirdPartySender.Tests.csproj"
+        ]
       }
+    ],
+    "expected_status": "incomplete",
+    "expected_coverage": "unknown",
+    "expected_command_count": 19,
+    "expected_diagnostics": [
+      "incomplete static MSBuild graph",
+      "unresolved Import $(MSBuildExtensionsPath)"
     ]
   },
   {
@@ -88,14 +320,6 @@
     ],
     "expected_commands": [
       {
-        "cwd": ".",
-        "argv": [
-          "dotnet",
-          "test",
-          "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
-        ]
-      },
-      {
         "cwd": "clients/web",
         "argv": [
           "yarn",
@@ -104,7 +328,166 @@
           "run",
           "--environment=jsdom"
         ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./agent-benchmark/specs/Sample.Benchmark.Tests/Sample.Benchmark.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ClientValidation/test/ClientValidation.Tests/ClientValidation.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/CommissionPlanSQSProcessor/test/CommissionPlanSQSProcessor.Tests/CommissionPlanSQSProcessor.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DeadLetter/test/DeadLetter.Tests/DeadLetter.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/EmailSender/test/EmailSender.Tests/EmailSender.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/JobRunner/test/JobRunner.Tests/JobRunner.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPoller/test/LabPoller.Tests/LabPoller.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPollingProcessor/test/LabPollingProcessor.Tests/LabPollingProcessor.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OfflineUpsertRunner/test/OfflineUpsertRunner.Tests/OfflineUpsertRunner.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OrganizationDataChanged/test/OrganizationDataChanged.Tests/OrganizationDataChanged.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PaymentGateway/test/PaymentGateway.Tests/PaymentGateway.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PublicController/test/PublicController.Tests/PublicController.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/Quickbooks/test/Quickbooks.Tests/Quickbooks.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SQSRunner/test/SQSRunner.Tests/SQSRunner.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SignUp/test/SignUp.Tests/SignUp.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/StatementSender/test/StatmentSender.Tests/StatementSender.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SubscriptionManager/test/SubscriptionManager.Tests/SubscriptionManager.Tests.csproj"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ThirdPartySender/test/ThirdPartySender.Tests/ThirdPartySender.Tests.csproj"
+        ]
       }
+    ],
+    "expected_status": "incomplete",
+    "expected_coverage": "unknown",
+    "expected_command_count": 20,
+    "expected_diagnostics": [
+      "incomplete static MSBuild graph",
+      "unresolved Import $(MSBuildExtensionsPath)"
     ]
   },
   {
@@ -128,6 +511,12 @@
           "run"
         ]
       }
+    ],
+    "expected_status": "incomplete",
+    "expected_coverage": "unknown",
+    "expected_command_count": 1,
+    "expected_diagnostics": [
+      "non-direct test script requires an explicit suite mapping"
     ]
   },
   {
@@ -161,6 +550,12 @@
           "run"
         ]
       }
+    ],
+    "expected_status": "incomplete",
+    "expected_coverage": "unknown",
+    "expected_command_count": 2,
+    "expected_diagnostics": [
+      "non-direct test script requires an explicit suite mapping"
     ]
   }
 ]

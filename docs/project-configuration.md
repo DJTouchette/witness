@@ -66,3 +66,13 @@ Exclusions narrow a rule rather than globally ignoring files. An unmatched
 plan. `fallback: fail` blocks automatic resolution for its matching changes;
 it never converts them to a green empty selection. Review configuration like
 source code: an explicit execution command can do anything its argv requests.
+
+## Migrating formerly inferred commands
+
+See [planner corrections](planner-corrections.md) for the version 1 compatibility
+contract. A custom `scripts.test` or lifecycle hook now needs an explicit reviewed
+mapping, often `npm run test --`, to preserve the package's setup. Imported .NET
+conventions outside the bounded static collector need mappings for **all** affected
+test projects. An incomplete plan retains known targets for review but must not be
+executed as a complete test gate. No examples here install configuration into a
+shared repository.
