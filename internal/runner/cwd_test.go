@@ -20,6 +20,12 @@ func TestCwdExecutionAndPOSIXRendering(t *testing.T) {
 	if err := os.Mkdir(full, 0755); err != nil {
 		t.Fatal(err)
 	}
+	// macOS temp paths can begin with /var, an alias of /private/var.
+	// Both direct execution and the shell report the physical directory.
+	full, err := filepath.EvalSymlinks(full)
+	if err != nil {
+		t.Fatal(err)
+	}
 	c := Command{Argv: []string{"sh", "-c", "pwd"}, Cwd: dir}
 	var out bytes.Buffer
 	code, err := Execute(c, root, &out, &out)
