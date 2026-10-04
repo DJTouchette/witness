@@ -1,0 +1,762 @@
+[
+  {
+    "name": "Workspacer native inline tests",
+    "pass": true,
+    "cold_ms": 6776,
+    "warm_ms": 537,
+    "status": "ready",
+    "selected": 1,
+    "summary": {
+      "changed": 1,
+      "tests_selected": 1,
+      "by_signal": {
+        "inline-test": 1
+      }
+    },
+    "commands": [
+      {
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./apps/native/Cargo.toml"
+        ],
+        "language": "rust",
+        "cwd": ".",
+        "reason": "whole Cargo manifest and reverse path dependencies (includes inline tests)"
+      }
+    ]
+  },
+  {
+    "name": "Leroy billing project references",
+    "pass": true,
+    "cold_ms": 3688,
+    "warm_ms": 380,
+    "status": "ready",
+    "selected": 50,
+    "summary": {
+      "changed": 1,
+      "tests_selected": 50,
+      "by_signal": {
+        "co-change": 2,
+        "direct-test": 1,
+        "import-1hop": 6,
+        "import-2hop": 44
+      },
+      "truncated": 21
+    },
+    "commands": [
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Accounts.Tests/Leroy.Accounts.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Api.IntegrationTests/Leroy.Api.IntegrationTests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Authorization.Tests/Leroy.Authorization.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Billing.Tests/Leroy.Billing.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Contacts.Tests/Leroy.Contacts.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.DiseaseAlerts.Tests/Leroy.DiseaseAlerts.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Orchestration.Tests/Leroy.Orchestration.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Patients.Tests/Leroy.Patients.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Platform.Tests/Leroy.Platform.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/tests/Leroy.Tenancy.Tests/Leroy.Tenancy.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      }
+    ]
+  },
+  {
+    "name": "Cassadol web Vitest",
+    "pass": true,
+    "cold_ms": 9523,
+    "warm_ms": 606,
+    "status": "ready",
+    "selected": 23,
+    "summary": {
+      "changed": 1,
+      "tests_selected": 23,
+      "by_signal": {
+        "direct-test": 1,
+        "import-1hop": 11,
+        "import-2hop": 20
+      }
+    },
+    "commands": [
+      {
+        "argv": [
+          "yarn",
+          "run",
+          "vitest",
+          "run",
+          "--environment=jsdom"
+        ],
+        "language": "node",
+        "cwd": "clients/web",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      }
+    ]
+  },
+  {
+    "name": "Cassadol C# DataLayer backend",
+    "pass": true,
+    "cold_ms": 9465,
+    "warm_ms": 761,
+    "status": "ready",
+    "selected": 23,
+    "summary": {
+      "changed": 1,
+      "tests_selected": 23,
+      "by_signal": {
+        "direct-test": 4,
+        "import-1hop": 4,
+        "import-2hop": 18
+      },
+      "diagnostics": [
+        "backend/Handlers/DataLayer/src/DataLayer/App.cs: 1 unresolved imports",
+        "backend/Handlers/DataLayer/test/DataLayer.Tests/AppHandlers/AppMutations.cs: import traversal capped at 100 importers",
+        "backend/Handlers/DataLayer/test/DataLayer.Tests/AppHandlers/AppQueryList.cs: import traversal capped at 100 importers"
+      ]
+    },
+    "commands": [
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./agent-benchmark/specs/Sample.Benchmark.Tests/Sample.Benchmark.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ClientValidation/test/ClientValidation.Tests/ClientValidation.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/CommissionPlanSQSProcessor/test/CommissionPlanSQSProcessor.Tests/CommissionPlanSQSProcessor.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DeadLetter/test/DeadLetter.Tests/DeadLetter.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/EmailSender/test/EmailSender.Tests/EmailSender.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/JobRunner/test/JobRunner.Tests/JobRunner.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPoller/test/LabPoller.Tests/LabPoller.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPollingProcessor/test/LabPollingProcessor.Tests/LabPollingProcessor.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OfflineUpsertRunner/test/OfflineUpsertRunner.Tests/OfflineUpsertRunner.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OrganizationDataChanged/test/OrganizationDataChanged.Tests/OrganizationDataChanged.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PaymentGateway/test/PaymentGateway.Tests/PaymentGateway.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PublicController/test/PublicController.Tests/PublicController.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/Quickbooks/test/Quickbooks.Tests/Quickbooks.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SQSRunner/test/SQSRunner.Tests/SQSRunner.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SignUp/test/SignUp.Tests/SignUp.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/StatementSender/test/StatmentSender.Tests/StatementSender.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SubscriptionManager/test/SubscriptionManager.Tests/SubscriptionManager.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ThirdPartySender/test/ThirdPartySender.Tests/ThirdPartySender.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      }
+    ]
+  },
+  {
+    "name": "Cassadol C# plus Vitest",
+    "pass": true,
+    "cold_ms": 10273,
+    "warm_ms": 792,
+    "status": "ready",
+    "selected": 46,
+    "summary": {
+      "changed": 2,
+      "tests_selected": 46,
+      "by_signal": {
+        "direct-test": 5,
+        "import-1hop": 15,
+        "import-2hop": 38
+      },
+      "diagnostics": [
+        "backend/Handlers/DataLayer/src/DataLayer/App.cs: 1 unresolved imports",
+        "backend/Handlers/DataLayer/test/DataLayer.Tests/AppHandlers/AppMutations.cs: import traversal capped at 100 importers",
+        "backend/Handlers/DataLayer/test/DataLayer.Tests/AppHandlers/AppQueryList.cs: import traversal capped at 100 importers"
+      ]
+    },
+    "commands": [
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./agent-benchmark/specs/Sample.Benchmark.Tests/Sample.Benchmark.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ClientValidation/test/ClientValidation.Tests/ClientValidation.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/CommissionPlanSQSProcessor/test/CommissionPlanSQSProcessor.Tests/CommissionPlanSQSProcessor.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DataLayer/test/DataLayer.Tests/DataLayer.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/DeadLetter/test/DeadLetter.Tests/DeadLetter.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/EmailSender/test/EmailSender.Tests/EmailSender.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/JobRunner/test/JobRunner.Tests/JobRunner.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPoller/test/LabPoller.Tests/LabPoller.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/LabPollingProcessor/test/LabPollingProcessor.Tests/LabPollingProcessor.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OfflineUpsertRunner/test/OfflineUpsertRunner.Tests/OfflineUpsertRunner.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/OrganizationDataChanged/test/OrganizationDataChanged.Tests/OrganizationDataChanged.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PaymentGateway/test/PaymentGateway.Tests/PaymentGateway.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/PublicController/test/PublicController.Tests/PublicController.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/Quickbooks/test/Quickbooks.Tests/Quickbooks.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SQSRunner/test/SQSRunner.Tests/SQSRunner.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SignUp/test/SignUp.Tests/SignUp.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/StatementSender/test/StatmentSender.Tests/StatementSender.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/SubscriptionManager/test/SubscriptionManager.Tests/SubscriptionManager.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "dotnet",
+          "test",
+          "./backend/Handlers/ThirdPartySender/test/ThirdPartySender.Tests/ThirdPartySender.Tests.csproj"
+        ],
+        "language": "dotnet",
+        "cwd": ".",
+        "reason": "whole test project from manifest/ProjectReference closure"
+      },
+      {
+        "argv": [
+          "yarn",
+          "run",
+          "vitest",
+          "run",
+          "--environment=jsdom"
+        ],
+        "language": "node",
+        "cwd": "clients/web",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      }
+    ]
+  },
+  {
+    "name": "Workspacer renderer Vitest",
+    "pass": true,
+    "cold_ms": 7256,
+    "warm_ms": 570,
+    "status": "ready",
+    "selected": 50,
+    "summary": {
+      "changed": 1,
+      "tests_selected": 50,
+      "by_signal": {
+        "co-change": 41,
+        "direct-test": 3,
+        "import-1hop": 10,
+        "import-2hop": 3
+      },
+      "truncated": 10,
+      "diagnostics": [
+        "apps/desktop/src/renderer/src/backend/webBackend.ts: 1 unresolved imports",
+        "apps/desktop/src/renderer/src/backend/webBackend.ts: parse partial (tree-sitter+regex)"
+      ]
+    },
+    "commands": [
+      {
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "playwright",
+          "test"
+        ],
+        "language": "node",
+        "cwd": "apps/desktop",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      },
+      {
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "vitest",
+          "run"
+        ],
+        "language": "node",
+        "cwd": "apps/desktop",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      },
+      {
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "vitest",
+          "run"
+        ],
+        "language": "node",
+        "cwd": "apps/desktop/src/renderer",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      }
+    ]
+  },
+  {
+    "name": "Workspacer Rust plus renderer Vitest",
+    "pass": true,
+    "cold_ms": 7509,
+    "warm_ms": 535,
+    "status": "ready",
+    "selected": 50,
+    "summary": {
+      "changed": 2,
+      "tests_selected": 50,
+      "by_signal": {
+        "co-change": 40,
+        "direct-test": 3,
+        "import-1hop": 10,
+        "import-2hop": 3,
+        "inline-test": 1
+      },
+      "truncated": 11,
+      "diagnostics": [
+        "apps/desktop/src/renderer/src/backend/webBackend.ts: 1 unresolved imports",
+        "apps/desktop/src/renderer/src/backend/webBackend.ts: parse partial (tree-sitter+regex)"
+      ]
+    },
+    "commands": [
+      {
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./apps/native/Cargo.toml"
+        ],
+        "language": "rust",
+        "cwd": ".",
+        "reason": "whole Cargo manifest and reverse path dependencies (includes inline tests)"
+      },
+      {
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "playwright",
+          "test"
+        ],
+        "language": "node",
+        "cwd": "apps/desktop",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      },
+      {
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "vitest",
+          "run"
+        ],
+        "language": "node",
+        "cwd": "apps/desktop",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      },
+      {
+        "argv": [
+          "npm",
+          "exec",
+          "--no",
+          "--",
+          "vitest",
+          "run"
+        ],
+        "language": "node",
+        "cwd": "apps/desktop/src/renderer",
+        "reason": "whole declared JS runner suite at nearest test config/package"
+      }
+    ]
+  }
+]

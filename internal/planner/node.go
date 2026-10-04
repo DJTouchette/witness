@@ -17,7 +17,9 @@ type nodeManifest struct {
 	PackageManager  string            `json:"packageManager"`
 }
 
-func (r *resolver) node(f string) ([]runner.Command, error) {
+func (r *resolver) node(f string) ([]runner.Command, error) { return r.nodeWithKind(f, "") }
+
+func (r *resolver) nodeWithKind(f, forced string) ([]runner.Command, error) {
 	pkg, ok := r.nearest(f, "package.json")
 	if !ok {
 		return nil, errors.New("no owning package.json")
@@ -45,7 +47,22 @@ func (r *resolver) node(f string) ([]runner.Command, error) {
 			}
 		}
 		if len(kinds) > 1 {
-			return nil, fmt.Errorf("ambiguous test configs in %s; add a suite mapping", d)
+			if forced != "" {
+				dir, kind = d, forced
+				break
+			}
+			// Several declared configs are several suites, not permission to
+			// arbitrarily choose one. Resolve each; custom mappings can narrow
+			// their source ownership when the repository knows more.
+			var all []runner.Command
+			for _, k := range kinds {
+				cmds, err := r.nodeWithKind(f, k)
+				if err != nil {
+					return nil, err
+				}
+				all = append(all, cmds...)
+			}
+			return all, nil
 		}
 		if len(kinds) == 1 {
 			dir, kind = d, kinds[0]

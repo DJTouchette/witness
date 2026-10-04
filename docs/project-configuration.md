@@ -19,7 +19,7 @@ treating a broad pattern as full coverage. Planning never executes these argv.
 ```
 
 Nearest manifests/configs autodetect native, hub and renderer already. Explicit
-mappings are useful for main-process packages with several test configs and for
+mappings are useful for narrowing source ownership among several test configs and for
 shared protocol changes that must trigger additional suites. Add the shared
 source glob to *each* affected suite. Configured rules take responsibility for
 cross-suite dependencies; they do not silently add inferred runner commands.

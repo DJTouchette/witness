@@ -92,7 +92,8 @@ The default planner uses:
 
 Nested JS configurations remain separate suites (for example desktop versus
 renderer). Simple script arguments such as `vitest --environment=jsdom` are
-preserved. Ambiguous runners, shell wrappers, dynamic .NET references,
+preserved. Several recognized configs in one directory produce one suite per runner.
+Ambiguous dependency-only runners, shell wrappers, dynamic .NET references,
 solution/props ownership and unusual manifest/configuration conventions can
 require explicit mappings. Detection does not evaluate JS config or MSBuild.
 External runtime services may still be needed to *run* a resolved suite.

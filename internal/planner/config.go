@@ -49,6 +49,9 @@ func (r *resolver) loadOverrides() error {
 	if c.SchemaVersion != 1 {
 		return fmt.Errorf(".witness.json: schema_version %d unsupported (want 1)", c.SchemaVersion)
 	}
+	if c.Suites == nil {
+		return errors.New(".witness.json: suites array is required")
+	}
 	names := map[string]bool{}
 	for i, o := range c.Suites {
 		bad := func(s string) error { return fmt.Errorf(".witness.json suites[%d] %q: %s", i, o.Name, s) }

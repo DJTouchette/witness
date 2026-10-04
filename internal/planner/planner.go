@@ -225,6 +225,9 @@ func (r *resolver) legacySuite(d, lang string) ([]runner.Command, error) {
 	return cmds, err
 }
 func (r *resolver) goSuite(f string) ([]runner.Command, error) {
+	if path.Base(f) == "go.work" || path.Base(f) == "go.work.sum" {
+		return nil, errors.New("Go workspace changes require explicit suite mappings for every member module")
+	}
 	d, ok := r.nearest(f, "go.mod")
 	if !ok {
 		return nil, errors.New("no owning go.mod; go.work requires an explicit suite mapping")
@@ -266,6 +269,9 @@ func (r *resolver) dirExists(f string) bool {
 	return err == nil && st.IsDir()
 }
 func (r *resolver) nearest(f string, names ...string) (string, bool) {
+	if !safeRel(f) {
+		return "", false
+	}
 	for d := path.Dir(f); ; d = path.Dir(d) {
 		for _, n := range names {
 			if r.exists(path.Join(d, n)) {

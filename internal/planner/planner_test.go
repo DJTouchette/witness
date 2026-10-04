@@ -144,3 +144,21 @@ func TestRefusesAmbiguousOrMalformedManifest(t *testing.T) {
 		}
 	}
 }
+
+func TestSeveralDeclaredJSConfigsPlanEachSuite(t *testing.T) {
+	root := tree(t, map[string]string{"desktop/package.json": `{"devDependencies":{"vitest":"4","@playwright/test":"1"}}`, "desktop/vitest.config.ts": "export default {}", "desktop/playwright.config.ts": "export default {}"})
+	p, err := Build(root, selection("desktop/src/main.ts"))
+	if err != nil || len(p.Commands) != 2 {
+		t.Fatalf("%+v %v", p, err)
+	}
+	runners := map[string]bool{}
+	for _, c := range p.Commands {
+		if c.Cwd != "desktop" {
+			t.Fatal(c)
+		}
+		runners[c.Argv[4]] = true
+	}
+	if !runners["vitest"] || !runners["playwright"] {
+		t.Fatal(runners)
+	}
+}

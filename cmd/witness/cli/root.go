@@ -354,6 +354,13 @@ Output formats:
 					return fmt.Errorf("--format plan does not accept runner overrides/passthrough; use .witness.json suite mappings")
 				}
 				plan, planErr := planner.Build(root, result)
+				if len(gaps) > 0 && sf.fallback == fallbackFail {
+					planErr = errors.Join(planErr, unprovenError(gaps))
+					plan.Status = "incomplete"
+					plan.Coverage = "unknown"
+					plan.Commands = []runner.Command{}
+					plan.Diagnostics = append(plan.Diagnostics, "--fallback=fail forbids widening this unproven selection")
+				}
 				enc := json.NewEncoder(out)
 				enc.SetIndent("", "  ")
 				if err := enc.Encode(plan); err != nil {

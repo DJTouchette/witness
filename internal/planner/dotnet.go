@@ -105,6 +105,10 @@ func (r *resolver) projectOwner(f string) (string, error) {
 	return "", errors.New("no owning .NET project manifest")
 }
 func (r *resolver) dotnet(f string) ([]runner.Command, error) {
+	switch path.Ext(f) {
+	case ".sln", ".slnx", ".props", ".targets":
+		return nil, errors.New("solution/imported MSBuild configuration requires explicit test-suite mappings")
+	}
 	if err := r.scanProjects(); err != nil {
 		return nil, err
 	}
