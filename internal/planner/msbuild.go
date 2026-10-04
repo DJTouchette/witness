@@ -233,7 +233,22 @@ func (s *msScan) reference(ref msReference) {
 		s.issue(ref.file, "missing or case-mismatched ProjectReference "+valuePath)
 		return
 	}
-	s.result.Refs = append(s.result.Refs, valuePath)
+	physical, err := repopath.Resolve(s.r.root, valuePath)
+	if err != nil {
+		s.issue(ref.file, err.Error())
+		return
+	}
+	physicalRoot, err := repopath.Resolve(s.r.root, ".")
+	if err != nil {
+		s.issue(ref.file, err.Error())
+		return
+	}
+	canonical, err := filepath.Rel(physicalRoot, physical)
+	if err != nil {
+		s.issue(ref.file, err.Error())
+		return
+	}
+	s.result.Refs = append(s.result.Refs, filepath.ToSlash(canonical))
 	if ref.conditional {
 		s.result.Conditional = true
 	}

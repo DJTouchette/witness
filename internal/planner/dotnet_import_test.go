@@ -1,6 +1,8 @@
 package planner
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -69,5 +71,16 @@ func TestDotnetConservativeConditionAndPropertyCases(t *testing.T) {
 				t.Fatalf("%+v %v", p, err)
 			}
 		})
+	}
+}
+
+func TestDotnetInRepositoryAliasReference(t *testing.T) {
+	root := tree(t, map[string]string{"Core/Core.csproj": `<Project/>`, "Tests/Tests.csproj": `<Project><PropertyGroup><IsTestProject>true</IsTestProject></PropertyGroup><ItemGroup><ProjectReference Include="../Alias/Core.csproj"/></ItemGroup></Project>`})
+	if err := os.Symlink(filepath.Join(root, "Core"), filepath.Join(root, "Alias")); err != nil {
+		t.Skip(err)
+	}
+	p, err := Build(root, selection("Core/a.cs"))
+	if err != nil || len(p.Commands) != 1 {
+		t.Fatalf("alias lost reverse edge: %+v %v", p, err)
 	}
 }

@@ -31,6 +31,16 @@ func (r *resolver) scanProjects() error {
 		r.projects[f] = r.inspectProject(f)
 		return nil
 	})
+	if r.projectErr == nil {
+		for f, p := range r.projects {
+			for _, ref := range p.Refs {
+				if _, ok := r.projects[ref]; !ok {
+					p.Issues = append(p.Issues, "ProjectReference is outside the scanned project graph (including case mismatch): "+ref)
+				}
+			}
+			r.projects[f] = p
+		}
+	}
 	return r.projectErr
 }
 func (r *resolver) projectOwner(f string) (string, error) {
