@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -147,7 +148,7 @@ func sortedCargoKeys(m map[string]bool) []string {
 func cargoUnknownKeys(m map[string]any, where, allowed string) []error {
 	var issues []error
 	for key := range m {
-		if !strings.Contains(" "+allowed+" ", " "+key+" ") {
+		if !slices.Contains(strings.Fields(allowed), key) {
 			issues = append(issues, fmt.Errorf("unsupported Cargo declaration %q in %s; coverage cannot be established", key, where))
 		}
 	}

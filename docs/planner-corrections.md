@@ -148,3 +148,76 @@ both audit cases, direct-path control and a build-hook sentinel. The separate
 `TestCargoAliasOfflineExecution` runs only this scratch Cargo fixture offline: core
 alone passes, app fails with exit 101, Witness retains that failure, and correcting
 the assertion makes the emitted suites pass. No real application suite is run.
+
+## Cargo override coverage and migration
+
+Local `[patch.<source>]` declarations now trigger the full discovered Cargo scope:
+all package manifests and workspace roots, retaining their normal argv/cwd. The
+command `reason` names this conservative fallback. It applies to workspace and
+standalone package manifests, `crates-io`, other registry names, and URL sources.
+Patch entries may rename their package with `package`; their local target must
+identify that package. Targets use the same physical directory, lexical `..`,
+symlink and scan-boundary checks as direct path dependencies.
+
+This is deliberately a scope fallback, not a Cargo dependency resolver. Patches
+apply transitively through registry packages that static repository inspection
+cannot see. Filtering consumers by a direct dependency name, semver requirement,
+registry identity, feature, or target condition could lose those consumers. The
+fallback therefore keeps even apparently unrelated packages and inactive/version-
+incompatible branches. It may run a package both via its workspace and directly.
+Normal, dev, build, target-specific and workspace-inherited dependencies all remain
+covered. Patch tables in non-root members also widen scope conservatively, even
+when Cargo would ignore them. No lockfile resolution, metadata, download, restore,
+build script or Cargo process runs during planning.
+
+Unsupported forms are no longer silently discarded by TOML struct decoding.
+`[replace]`, non-local patches, unknown top-level/workspace/target/dependency
+fields, malformed dependency fields and unresolved local targets produce named
+diagnostics. Known commands remain available as evidence, but `Plan` returns an
+error with `status: incomplete` and `coverage: unknown`. Legacy `Commands` refuses;
+`Run` returns an error and code -1 without executing. CLI plan prints the partial
+JSON and exits nonzero; CLI exec emits no runnable commands and exits nonzero.
+Repeated planning must preserve the same refusal.
+
+Repository `.cargo/config` and `.cargo/config.toml` files at each discovered
+crate's ancestors are inspected explicitly despite hidden-directory discovery
+exclusions. Known `paths`, `patch`, `source`, `include`, `unstable`, and unknown
+configuration declarations are unsupported and diagnose incomplete coverage.
+Both filenames are inspected conservatively rather than simulating precedence.
+Cargo credential files, home/ancestor configuration outside the repository,
+environment overrides, CLI `--config`, custom build-generated dependencies and
+external registry graphs are not read or evaluated. Completeness is scoped to
+repository declarations and the existing bounded manifest scan; ambient overrides
+and hidden/excluded independent crates require reviewed explicit suite mappings.
+A ready plan is a coverage contract, not proof that Cargo can build successfully.
+
+Migration: remove unsupported overrides, move a supported local override into a
+manifest patch table, or map **all** affected suites with `.witness.json`. Mapping
+just core would recreate the lost-dependent bug. API/schema versions and Rivet's
+released pin are unchanged. Consumers must check the error/status before executing
+partial commands. The additional workspace command is intentional: the tiny patch
+fixture now has three commands rather than the original expected two.
+
+Repeat the portable audits in a disposable copy (fixtures intentionally contain a
+failing dependent test):
+
+```sh
+PROOF_DIR=$(mktemp -d)
+cp -R internal/e2e/testdata/fixtures/rust-patch "$PROOF_DIR/repo"
+git -C "$PROOF_DIR/repo" init -q
+witness audit audits/cargo-patch.json --root "$PROOF_DIR/repo"
+mkdir -p "$PROOF_DIR/repo/.cargo"
+printf "paths=['core']\n" > "$PROOF_DIR/repo/.cargo/config.toml"
+witness audit audits/cargo-unsupported.json --root "$PROOF_DIR/repo"
+```
+
+`TestCargoPatchPublicPlanningAndAudit` guards API, CLI plan/exec, the reusable audit,
+physical aliases, and both Cargo-process/build-hook sentinels.
+`TestCargoPatchOfflineExecution` proves core passes, app fails with Cargo 101,
+Witness preserves that failure, and a corrected fixture passes.
+`TestCargoUnsupportedOverrideRefusesExecution` tests API/legacy/CLI refusal and the
+incomplete audit. The planner matrix also retains transitive consumers without a
+matching direct package name, version-incompatible and optional dependencies,
+renamed packages, standalone patches, registry/URL sources and strict boundaries.
+Cargo's [override reference](https://doc.rust-lang.org/cargo/reference/overriding-dependencies.html)
+describes the transitive patch behavior underlying this fallback.

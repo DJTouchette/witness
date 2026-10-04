@@ -17,11 +17,70 @@
           "--manifest-path",
           "./apps/native/Cargo.toml"
         ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./apps/tui/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./services/claudemon/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./services/hub-rs/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./tools/capability-source-check/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./tools/macos-contract-check/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./tools/windows-contract-check/Cargo.toml"
+        ]
       }
     ],
-    "expected_status": "ready",
-    "expected_coverage": "suites",
-    "expected_command_count": 1
+    "expected_status": "incomplete",
+    "expected_coverage": "unknown",
+    "expected_command_count": 7,
+    "expected_diagnostics": [
+      "Cargo patch gpui-component",
+      "Cargo patch portable-pty",
+      "target is outside manifest scan scope or has no Cargo.toml"
+    ]
   },
   {
     "name": "Leroy billing project references",
@@ -540,6 +599,60 @@
         ]
       },
       {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./apps/tui/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./services/claudemon/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./services/hub-rs/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./tools/capability-source-check/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./tools/macos-contract-check/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./tools/windows-contract-check/Cargo.toml"
+        ]
+      },
+      {
         "cwd": "apps/desktop/src/renderer",
         "argv": [
           "npm",
@@ -553,9 +666,12 @@
     ],
     "expected_status": "incomplete",
     "expected_coverage": "unknown",
-    "expected_command_count": 2,
+    "expected_command_count": 8,
     "expected_diagnostics": [
-      "non-direct test script requires an explicit suite mapping"
+      "non-direct test script requires an explicit suite mapping",
+      "Cargo patch gpui-component",
+      "Cargo patch portable-pty",
+      "target is outside manifest scan scope or has no Cargo.toml"
     ]
   }
 ]

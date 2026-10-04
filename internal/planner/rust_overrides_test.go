@@ -114,3 +114,21 @@ func TestCargoPatchBoundaryAndIdentity(t *testing.T) {
 		})
 	}
 }
+
+func TestCargoConfigPhysicalBoundary(t *testing.T) {
+	root := tree(t, map[string]string{"core/Cargo.toml": "[package]\nname='core'\nversion='0.1.0'\n"})
+	outside := tree(t, map[string]string{"config.toml": "paths=['somewhere']\n"})
+	cargoLink(t, root, ".cargo", outside)
+	p, err := Build(root, selection("core/src/lib.rs"))
+	if err == nil || p.Status != "incomplete" || p.Coverage != "unknown" || len(p.Commands) != 1 {
+		t.Fatalf("%+v %v", p, err)
+	}
+}
+
+func TestCargoOverrideAllowlistMatchesWholeKeys(t *testing.T) {
+	// Quoted TOML keys may contain spaces: a substring is not a declaration.
+	issues := cargoUnknownKeys(map[string]any{"path package": "core"}, "fixture", "version path package registry")
+	if len(issues) != 1 {
+		t.Fatal(issues)
+	}
+}
