@@ -17,7 +17,57 @@ type nodeManifest struct {
 	PackageManager  string            `json:"packageManager"`
 }
 
-func (r *resolver) node(f string) ([]runner.Command, error) { return r.nodeWithKind(f, "") }
+// Manifest and lock changes affect every independent config owned by this
+// package. A nested package.json is a boundary, not an implicit workspace.
+func (r *resolver) node(f string) ([]runner.Command, error) {
+	switch path.Base(f) {
+	case "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml":
+		pkg, ok := r.nearest(f, "package.json")
+		if !ok {
+			return nil, errors.New("no owning package.json")
+		}
+		var configs []string
+		err := r.walkManifests(func(p string) error {
+			if nodeConfigKind(p) == "" {
+				return nil
+			}
+			owner, ok := r.nearest(p, "package.json")
+			if ok && owner == pkg {
+				configs = append(configs, p)
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(configs) > 0 {
+			all, err := r.nodeWithKind(f, "")
+			if err != nil {
+				return nil, err
+			}
+			for _, config := range configs {
+				cmds, err := r.nodeWithKind(config, nodeConfigKind(config))
+				if err != nil {
+					return nil, err
+				}
+				all = append(all, cmds...)
+			}
+			return dedup(all), nil
+		}
+	}
+	return r.nodeWithKind(f, "")
+}
+
+func nodeConfigKind(f string) string {
+	for _, k := range []string{"vitest", "jest", "playwright"} {
+		for _, ext := range []string{"ts", "js", "mts", "mjs", "cts", "cjs"} {
+			if path.Base(f) == k+".config."+ext {
+				return k
+			}
+		}
+	}
+	return ""
+}
 
 func (r *resolver) nodeWithKind(f, forced string) ([]runner.Command, error) {
 	pkg, ok := r.nearest(f, "package.json")
@@ -139,16 +189,26 @@ func (r *resolver) nodeWithKind(f, forced string) ([]runner.Command, error) {
 	case "jest":
 		argv = append(argv, "--watch=false")
 	}
-	// Preserve simple test-script options (notably Vitest's jsdom environment).
-	// Complex script wrappers need an explicit mapping, never shell evaluation.
+	// Only a direct, non-narrowing script can be represented by this inferred
+	// whole-runner command. Never bypass wrappers, shell expansion or lifecycle
+	// setup. A declarative mapping can preserve them using package-manager argv.
+	if m.Scripts["pretest"] != "" || m.Scripts["posttest"] != "" || m.Scripts[kind] != "" {
+		return nil, errors.New("test lifecycle/runner script requires an explicit suite mapping to preserve setup and package-manager semantics")
+	}
 	script := strings.Fields(m.Scripts["test"])
-	if dir == pkg && len(script) > 0 && script[0] == kind {
+	if len(script) > 0 {
+		if script[0] != kind {
+			return nil, errors.New("non-direct test script requires an explicit suite mapping; inferred runner would bypass wrapper/setup")
+		}
 		for _, a := range script[1:] {
-			if strings.ContainsAny(a, ";&|$`\"'\\") {
-				return nil, errors.New("complex test script requires an explicit suite mapping")
-			}
-			if a == "run" || a == "--watch" || a == "--watchAll" || a == "--watch=false" {
+			if a == "run" && kind == "vitest" || a == "test" && kind == "playwright" || a == "--watch=false" || a == "--watch" || a == "--watchAll" {
 				continue
+			}
+			// This intentionally tiny allowlist cannot narrow test ownership or point
+			// at another config/workspace. Quoted values need a mapping, not shell parsing.
+			allowed := a == "--globals" || strings.HasPrefix(a, "--environment=") || strings.HasPrefix(a, "--reporter=")
+			if !allowed || strings.ContainsAny(a, "; &|$`\"'\\<>\n\r\t") {
+				return nil, fmt.Errorf("test script option %q requires an explicit suite mapping (cannot prove whole-suite semantics)", a)
 			}
 			argv = append(argv, a)
 		}
