@@ -1,0 +1,45 @@
+[
+  {
+    "name": "Cargo config path override refuses inferred execution",
+    "root": ".",
+    "files": [
+      "core/src/lib.rs"
+    ],
+    "expected_status": "incomplete",
+    "expected_coverage": "unknown",
+    "expected_command_count": 3,
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./Cargo.toml",
+          "--workspace"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./core/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./app/Cargo.toml"
+        ]
+      }
+    ],
+    "expected_diagnostics": [
+      "unsupported Cargo config override \"paths\""
+    ]
+  }
+]

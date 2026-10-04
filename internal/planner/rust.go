@@ -15,6 +15,9 @@ import (
 )
 
 type cargoDoc struct {
+	// Retain unmodelled declarations so new Cargo graph forms cannot silently
+	// disappear during struct decoding and turn unknown coverage into ready.
+	raw     map[string]any
 	Package struct {
 		Name      string `toml:"name"`
 		Workspace string `toml:"workspace"`
@@ -131,6 +134,9 @@ func (r *resolver) rust(f string) ([]runner.Command, error) {
 			if err = toml.Unmarshal(b, &doc); err != nil {
 				return fmt.Errorf("%s: %w", f, err)
 			}
+			if err = toml.Unmarshal(b, &doc.raw); err != nil {
+				return fmt.Errorf("%s: %w", f, err)
+			}
 			dir, err := r.cargoDir(path.Dir(f))
 			if err != nil {
 				return err
@@ -178,7 +184,16 @@ func (r *resolver) rust(f string) ([]runner.Command, error) {
 	if len(affected) == 0 {
 		return nil, errors.New("no owning Cargo.toml")
 	}
-	var issues []error
+	fullCargoScope, issues := r.cargoOverrides()
+	if fullCargoScope {
+		// Patch resolution is transitive through registry crates we cannot read.
+		// Matching dependency names/versions alone would miss those dependents.
+		// Include every discovered Cargo suite, including workspace commands for
+		// members outside ordinary discovery, rather than inventing a resolver.
+		for dir := range r.crates {
+			affected[dir] = true
+		}
+	}
 	// Include reverse path dependencies, not just the crate containing the file.
 	// Workspace inheritance resolves against the ancestor workspace manifest.
 	refs := map[string][]string{}
@@ -268,7 +283,11 @@ func (r *resolver) rust(f string) ([]runner.Command, error) {
 		if doc.Workspace != nil {
 			argv = append(argv, "--workspace")
 		}
-		cmds = append(cmds, runner.Command{Cwd: ".", Lang: "rust", Argv: argv, Reason: "whole Cargo manifest and reverse path dependencies (includes inline tests)"})
+		reason := "whole Cargo manifest and reverse path dependencies (includes inline tests)"
+		if fullCargoScope {
+			reason = "Cargo patch override: conservative full discovered Cargo scope (transitive sources and versions are not resolved)"
+		}
+		cmds = append(cmds, runner.Command{Cwd: ".", Lang: "rust", Argv: argv, Reason: reason})
 	}
 	return cmds, errors.Join(issues...)
 }

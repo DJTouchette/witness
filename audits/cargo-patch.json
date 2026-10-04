@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Cargo patch retains the failing reverse dependent",
+    "root": ".",
+    "files": [
+      "core/src/lib.rs"
+    ],
+    "expected_status": "ready",
+    "expected_coverage": "suites",
+    "expected_command_count": 3,
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./Cargo.toml",
+          "--workspace"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./core/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./app/Cargo.toml"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Changed patch and physical source deduplicate suites",
+    "root": ".",
+    "files": [
+      "core/src/lib.rs",
+      "app/src/lib.rs"
+    ],
+    "expected_status": "ready",
+    "expected_coverage": "suites",
+    "expected_command_count": 3,
+    "expected_commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./Cargo.toml",
+          "--workspace"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./core/Cargo.toml"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "cargo",
+          "test",
+          "--manifest-path",
+          "./app/Cargo.toml"
+        ]
+      }
+    ]
+  }
+]
