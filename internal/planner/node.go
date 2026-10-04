@@ -20,6 +20,9 @@ type nodeManifest struct {
 // Manifest and lock changes affect every independent config owned by this
 // package. A nested package.json is a boundary, not an implicit workspace.
 func (r *resolver) node(f string) ([]runner.Command, error) {
+	if nonstandardNodeConfig(f) {
+		return nil, errors.New("nonstandard JS config requires an explicit suite mapping with --config")
+	}
 	switch path.Base(f) {
 	case "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml":
 		pkg, ok := r.nearest(f, "package.json")
@@ -28,10 +31,13 @@ func (r *resolver) node(f string) ([]runner.Command, error) {
 		}
 		var configs []string
 		err := r.walkManifests(func(p string) error {
-			if nodeConfigKind(p) == "" {
+			if nodeConfigKind(p) == "" && !nonstandardNodeConfig(p) {
 				return nil
 			}
 			owner, ok := r.nearest(p, "package.json")
+			if ok && owner == pkg && nonstandardNodeConfig(p) {
+				return fmt.Errorf("%s: nonstandard JS config requires an explicit suite mapping with --config", p)
+			}
 			if ok && owner == pkg {
 				configs = append(configs, p)
 			}
@@ -214,4 +220,14 @@ func (r *resolver) nodeWithKind(f, forced string) ([]runner.Command, error) {
 		}
 	}
 	return []runner.Command{{Cwd: dir, Lang: "node", Argv: argv, Reason: "whole declared JS runner suite at nearest test config/package"}}, nil
+}
+
+func nonstandardNodeConfig(f string) bool {
+	base := path.Base(f)
+	for _, k := range []string{"vitest", "jest", "playwright"} {
+		if strings.HasPrefix(base, k+".") && strings.Contains(base, "config.") && nodeConfigKind(f) == "" {
+			return true
+		}
+	}
+	return false
 }

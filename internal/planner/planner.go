@@ -98,7 +98,6 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 		cmds, err := r.resolve(f)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w: %w", f, runner.ErrNoRunner, err))
-			continue
 		}
 		if err := validateCommands(root, cmds); err != nil {
 			errs = append(errs, err)
@@ -125,14 +124,15 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 }
 
 type resolver struct {
-	crates       map[string]cargoDoc
-	cargoScanned bool
-	cargoErr     error
-	root         string
-	overrides    []Override
-	projects     map[string]dotProject
-	projectErr   error
-	scanned      bool
+	crates                map[string]cargoDoc
+	cargoScanned          bool
+	cargoErr              error
+	root                  string
+	overrides             []Override
+	projects              map[string]dotProject
+	projectErr            error
+	scanned               bool
+	projectIssuesReported bool
 }
 
 func (r *resolver) resolve(f string) ([]runner.Command, error) {
@@ -378,9 +378,6 @@ func (r *resolver) walkManifests(visit func(string) error) error {
 			if strings.HasPrefix(d.Name(), ".") {
 				return filepath.SkipDir
 			}
-			return nil
-		}
-		if d.Type()&os.ModeSymlink != 0 {
 			return nil
 		}
 		rel, _ := filepath.Rel(r.root, p)

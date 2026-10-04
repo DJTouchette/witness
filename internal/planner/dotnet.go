@@ -1,20 +1,19 @@
 package planner
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"path"
 	"sort"
-	"strings"
 
 	"github.com/djtouchette/witness/internal/runner"
 )
 
 type dotProject struct {
-	Test    bool
-	Refs    []string
-	Dynamic bool
+	Test        bool
+	Refs        []string
+	Issues      []string
+	Conditional bool
 }
 
 func (r *resolver) scanProjects() error {
@@ -29,54 +28,7 @@ func (r *resolver) scanProjects() error {
 		default:
 			return nil
 		}
-		b, err := r.read(f)
-		if err != nil {
-			return err
-		}
-		var doc struct {
-			Properties []struct {
-				IsTestProject string `xml:"IsTestProject"`
-			} `xml:"PropertyGroup"`
-			Groups []struct {
-				Packages []struct {
-					Include string `xml:"Include,attr"`
-				} `xml:"PackageReference"`
-				Refs []struct {
-					Include string `xml:"Include,attr"`
-				} `xml:"ProjectReference"`
-			} `xml:"ItemGroup"`
-		}
-		if err = xml.Unmarshal(b, &doc); err != nil {
-			return fmt.Errorf("%s: %w", f, err)
-		}
-		p := dotProject{}
-		for _, g := range doc.Properties {
-			if strings.EqualFold(strings.TrimSpace(g.IsTestProject), "true") {
-				p.Test = true
-			}
-		}
-		for _, g := range doc.Groups {
-			for _, pkg := range g.Packages {
-				switch strings.ToLower(pkg.Include) {
-				case "microsoft.net.test.sdk", "xunit", "nunit", "mstest.testframework":
-					p.Test = true
-				}
-			}
-			for _, ref := range g.Refs {
-				s := strings.ReplaceAll(ref.Include, "\\", "/")
-				if strings.ContainsAny(s, "$*?;") {
-					p.Dynamic = true
-					continue
-				}
-				s = path.Clean(path.Join(path.Dir(f), s))
-				if !safeRel(s) {
-					p.Dynamic = true
-					continue
-				}
-				p.Refs = append(p.Refs, s)
-			}
-		}
-		r.projects[f] = p
+		r.projects[f] = r.inspectProject(f)
 		return nil
 	})
 	return r.projectErr
@@ -134,22 +86,28 @@ func (r *resolver) dotnet(f string) ([]runner.Command, error) {
 	}
 	var targets []string
 	for p, meta := range r.projects {
-		// A dynamic reference might refer to this change. Refusing is safer than
-		// quietly omitting a test project from a supposedly whole-suite plan.
-		if meta.Dynamic {
-			return nil, fmt.Errorf("%s has dynamic/outside ProjectReference; add a suite mapping", p)
-		}
 		if affected[p] && meta.Test {
 			targets = append(targets, p)
 		}
 	}
 	if len(targets) == 0 {
-		return nil, fmt.Errorf("no test project references %s (including transitively)", owner)
+		return nil, errors.Join(append(r.projectGraphIssues(), fmt.Errorf("no test project references %s (including transitively)", owner))...)
 	}
 	sort.Strings(targets)
 	var cmds []runner.Command
 	for _, p := range targets {
-		cmds = append(cmds, runner.Command{Cwd: ".", Lang: "dotnet", Argv: []string{"dotnet", "test", "./" + p}, Reason: "whole test project from manifest/ProjectReference closure"})
+		cmds = append(cmds, runner.Command{Cwd: ".", Lang: "dotnet", Argv: []string{"dotnet", "test", "./" + p}, Reason: "whole test project from static ProjectReference superset (conditional literal edges included)"})
 	}
-	return cmds, nil
+	return cmds, errors.Join(r.projectGraphIssues()...)
+}
+
+// Report repository-wide uncertainty once per Build; every known target is
+// still retained. This avoids repeating the same import graph for each ranked
+// test and turning a small plan into megabytes of duplicate diagnostics.
+func (r *resolver) projectGraphIssues() []error {
+	if r.projectIssuesReported {
+		return nil
+	}
+	r.projectIssuesReported = true
+	return projectIssues(r.projects)
 }

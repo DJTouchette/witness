@@ -18,7 +18,8 @@ func TestDotnetManifestUnderMSBuild(t *testing.T) {
 	}
 	root := tree(t, map[string]string{
 		"backend/src/Core/Core.csproj": `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>`,
-		"backend/checks/Tests.csproj":  `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject></PropertyGroup><ItemGroup><ProjectReference Include="../src/Core/Core.csproj"/></ItemGroup></Project>`,
+		"backend/checks/Tests.csproj":  `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject></PropertyGroup><Import Project="Refs.props"/></Project>`,
+		"backend/checks/Refs.props":    `<Project><ItemGroup><ProjectReference Include="../src/Core/Core.csproj"/></ItemGroup></Project>`,
 	})
 	p, err := Build(root, selection("backend/src/Core/Value.cs"))
 	if err != nil || len(p.Commands) != 1 {
