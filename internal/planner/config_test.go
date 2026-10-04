@@ -54,3 +54,14 @@ func TestConfigCwdSymlinkCannotEscape(t *testing.T) {
 		t.Fatal("outside cwd accepted")
 	}
 }
+
+func TestConfigChangesAndEmptyDiffDoNotHideInvalidRules(t *testing.T) {
+	root := tree(t, map[string]string{".witness.json": `{"schema_version":2,"suites":[]}`})
+	if p, err := Build(root, selection()); err == nil || p.Status != "incomplete" {
+		t.Fatalf("invalid config ignored on empty diff: %+v %v", p, err)
+	}
+	root = tree(t, map[string]string{"go.mod": "module example\n", ".witness.json": `{"schema_version":1,"suites":[]}`})
+	if p, err := Build(root, selection(".witness.json")); err == nil || p.Status != "incomplete" {
+		t.Fatalf("config change silently assigned a dominant suite: %+v %v", p, err)
+	}
+}

@@ -40,16 +40,16 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 		p.Coverage = "unknown"
 		return p, errors.New("nil test selection")
 	}
-	if len(result.ChangedFiles) == 0 && len(result.Tests) == 0 {
-		p.Status = "no_changes"
-		return p, nil
-	}
 	r := resolver{root: root}
 	if err := r.loadOverrides(); err != nil {
 		p.Status = "incomplete"
 		p.Coverage = "unknown"
 		p.Diagnostics = append(p.Diagnostics, err.Error())
 		return p, err
+	}
+	if len(result.ChangedFiles) == 0 && len(result.Tests) == 0 {
+		p.Status = "no_changes"
+		return p, nil
 	}
 	if len(r.overrides) == 0 {
 		if cmds, ok := r.selected(result); ok {
@@ -134,6 +134,9 @@ func (r *resolver) resolve(f string) ([]runner.Command, error) {
 	}
 	if len(overrides) > 0 {
 		return overrides, nil
+	}
+	if f == ".witness.json" {
+		return nil, errors.New("Witness configuration changed; map .witness.json to all affected suites explicitly (removed mappings cannot be inferred)")
 	}
 	switch strings.ToLower(path.Ext(f)) {
 	case ".rs":
