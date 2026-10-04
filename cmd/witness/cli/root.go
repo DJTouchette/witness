@@ -302,6 +302,7 @@ If no files are provided, uses git diff to detect changes.
 Output formats:
   json   — structured JSON with scores and signals (default)
   paths  — one test path per line
+  plan   — versioned JSON argv/cwd plan; never executes
   exec   — test runner command (auto-detected: mix test, go test, dotnet test, etc.)`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			sf.capture(cmd)

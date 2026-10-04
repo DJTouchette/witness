@@ -46,6 +46,8 @@ reported gap does not mathematically prove the dependency graph complete.
 
 ## Plans
 
+The machine contract is [test-plan-v1.json](schemas/test-plan-v1.json).
+
 `select --format plan` always writes a machine result when planning resolves or
 refuses a suite (initialization/usage errors can still occur before a result).
 It exits nonzero for an incomplete plan. It ignores no unsupported part of a
