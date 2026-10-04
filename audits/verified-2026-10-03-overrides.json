@@ -1,0 +1,440 @@
+{
+  "witness_source": "23f4c5668639061f85f16eb8dab5c789c0ddd7db",
+  "rivet_source": "70a31da0d7873abdfb84f831297241a73eab3ac9",
+  "repair_base": "cc84ebbee31d3ff2cf17ad0f04239d4182650eed",
+  "evidence_directory": "/tmp/witness-override-repair",
+  "gates": {
+    "witness": [
+      {
+        "check": "full",
+        "exit": 0,
+        "seconds": 31.88
+      },
+      {
+        "check": "race",
+        "exit": 0,
+        "seconds": 28.19
+      },
+      {
+        "check": "vet",
+        "exit": 0,
+        "seconds": 0.21
+      },
+      {
+        "check": "build-all",
+        "exit": 0,
+        "seconds": 1.07
+      },
+      {
+        "check": "build",
+        "exit": 0,
+        "seconds": 1.07
+      },
+      {
+        "check": "gofmt",
+        "exit": 0,
+        "seconds": 0.02
+      },
+      {
+        "check": "diff",
+        "exit": 0,
+        "seconds": 0.0
+      },
+      {
+        "check": "goreleaser",
+        "exit": 0,
+        "seconds": 0.02
+      }
+    ],
+    "composed": [
+      {
+        "check": "full",
+        "exit": 0,
+        "seconds": 5.89
+      },
+      {
+        "check": "race",
+        "exit": 0,
+        "seconds": 10.01
+      },
+      {
+        "check": "vet",
+        "exit": 0,
+        "seconds": 0.49
+      },
+      {
+        "check": "build-all",
+        "exit": 0,
+        "seconds": 2.64
+      },
+      {
+        "check": "build",
+        "exit": 0,
+        "seconds": 2.74
+      },
+      {
+        "check": "gofmt",
+        "exit": 0,
+        "seconds": 0.16
+      },
+      {
+        "check": "diff",
+        "exit": 0,
+        "seconds": 0.01
+      },
+      {
+        "check": "goreleaser",
+        "exit": 0,
+        "seconds": 0.24
+      }
+    ]
+  },
+  "audits": {
+    "representative": [
+      {
+        "name": "Workspacer native inline tests",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 7
+      },
+      {
+        "name": "Leroy billing project references",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 10
+      },
+      {
+        "name": "Cassadol web Vitest",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 1
+      },
+      {
+        "name": "Cassadol C# DataLayer backend",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 19
+      },
+      {
+        "name": "Cassadol C# plus Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 20
+      },
+      {
+        "name": "Workspacer renderer Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 1
+      },
+      {
+        "name": "Workspacer Rust plus renderer Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 8
+      }
+    ],
+    "edge": [
+      {
+        "name": "imported ProjectReference retains both actual targets",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      },
+      {
+        "name": "shell wrapper requires explicit mapping",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 0
+      },
+      {
+        "name": "package manifest retains nested renderer suite",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      },
+      {
+        "name": "inferred cwd symlink must remain within root",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 0
+      }
+    ],
+    "alias": [
+      {
+        "name": "Cargo alias retains the failing reverse dependent",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      },
+      {
+        "name": "Changed alias and physical source deduplicate suites",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      }
+    ],
+    "patch": [
+      {
+        "name": "Cargo patch retains the failing reverse dependent",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 3
+      },
+      {
+        "name": "Changed patch and physical source deduplicate suites",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 3
+      }
+    ],
+    "unsupported": [
+      {
+        "name": "Cargo config path override refuses inferred execution",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 3
+      }
+    ],
+    "composed_representative": [
+      {
+        "name": "Workspacer native inline tests",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 7
+      },
+      {
+        "name": "Leroy billing project references",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 10
+      },
+      {
+        "name": "Cassadol web Vitest",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 1
+      },
+      {
+        "name": "Cassadol C# DataLayer backend",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 19
+      },
+      {
+        "name": "Cassadol C# plus Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 20
+      },
+      {
+        "name": "Workspacer renderer Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 1
+      },
+      {
+        "name": "Workspacer Rust plus renderer Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 8
+      }
+    ],
+    "composed_edge": [
+      {
+        "name": "imported ProjectReference retains both actual targets",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      },
+      {
+        "name": "shell wrapper requires explicit mapping",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 0
+      },
+      {
+        "name": "package manifest retains nested renderer suite",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      },
+      {
+        "name": "inferred cwd symlink must remain within root",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 0
+      }
+    ],
+    "composed_alias": [
+      {
+        "name": "Cargo alias retains the failing reverse dependent",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      },
+      {
+        "name": "Changed alias and physical source deduplicate suites",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2
+      }
+    ],
+    "composed_patch": [
+      {
+        "name": "Cargo patch retains the failing reverse dependent",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 3
+      },
+      {
+        "name": "Changed patch and physical source deduplicate suites",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 3
+      }
+    ],
+    "composed_unsupported": [
+      {
+        "name": "Cargo config path override refuses inferred execution",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 3
+      }
+    ]
+  },
+  "offline_proof": [
+    {
+      "name": "before-plan",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "before-exec",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "before-audit",
+      "exit": 1,
+      "expected": 1
+    },
+    {
+      "name": "after-plan",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "after-exec",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "after-audit",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "after-api",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "cargo-core",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "cargo-app",
+      "exit": 101,
+      "expected": 101
+    },
+    {
+      "name": "before-run",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "after-run",
+      "exit": 101,
+      "expected": 101
+    },
+    {
+      "name": "composed-run",
+      "exit": 1,
+      "expected": 1
+    },
+    {
+      "name": "after-corrected",
+      "exit": 0,
+      "expected": 0
+    },
+    {
+      "name": "non-crates-api",
+      "exit": 0,
+      "expected": 0
+    }
+  ],
+  "standalone_proof": [
+    {
+      "check": "api",
+      "exit": 0
+    },
+    {
+      "check": "core",
+      "exit": 0
+    },
+    {
+      "check": "app",
+      "exit": 101
+    },
+    {
+      "check": "witness",
+      "exit": 101
+    }
+  ],
+  "mcp": {
+    "mcp": "pass",
+    "calls": 4,
+    "plan_required": true,
+    "runner_executed": false
+  },
+  "caveats": [
+    "Bounded static full Cargo scope; no semver, source, feature or external transitive resolver.",
+    "Workspacer native now honestly incomplete/7, mixed incomplete/8 for excluded vendor patch targets; prior ready/1 was unsafe.",
+    "Rivet pin unchanged at v0.5.0; composed metadata is (devel).",
+    "Linux runtime only; fresh independent source review, supported-branch CI and released-pin/package verification required."
+  ]
+}
