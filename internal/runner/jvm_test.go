@@ -87,8 +87,8 @@ func TestFormatCommand_Maven(t *testing.T) {
 			files: map[string]string{
 				"pom.xml":                 "<project><modules/></project>",
 				"services/orders/pom.xml": "<project/>",
-				"services/orders/src/test/java/com/example/orders/OrderTest.java":     javaSource("com.example.orders", "OrderTest"),
-				"services/billing/pom.xml":                                            "<project/>",
+				"services/orders/src/test/java/com/example/orders/OrderTest.java": javaSource("com.example.orders", "OrderTest"),
+				"services/billing/pom.xml": "<project/>",
 				"services/billing/src/test/java/com/example/billing/InvoiceTest.java": javaSource("com.example.billing", "InvoiceTest"),
 			},
 			paths: []string{
