@@ -1,0 +1,70 @@
+{
+  "source_commit": "3318c90008d1a9e68a94a84e2ddfb5d56867ba91",
+  "platform": "Linux amd64",
+  "runner_executed": false,
+  "cases": [
+    {
+      "name": "Workspacer native inline tests",
+      "pass": true,
+      "status": "ready",
+      "coverage": "suites",
+      "command_count": 1,
+      "cold_ms": 6381,
+      "warm_ms": 493
+    },
+    {
+      "name": "Leroy billing project references",
+      "pass": true,
+      "status": "ready",
+      "coverage": "suites",
+      "command_count": 10,
+      "cold_ms": 2684,
+      "warm_ms": 225
+    },
+    {
+      "name": "Cassadol web Vitest",
+      "pass": true,
+      "status": "ready",
+      "coverage": "suites",
+      "command_count": 1,
+      "cold_ms": 8592,
+      "warm_ms": 647
+    },
+    {
+      "name": "Cassadol C# DataLayer backend",
+      "pass": true,
+      "status": "incomplete",
+      "coverage": "unknown",
+      "command_count": 19,
+      "cold_ms": 8672,
+      "warm_ms": 690
+    },
+    {
+      "name": "Cassadol C# plus Vitest",
+      "pass": true,
+      "status": "incomplete",
+      "coverage": "unknown",
+      "command_count": 20,
+      "cold_ms": 8753,
+      "warm_ms": 731
+    },
+    {
+      "name": "Workspacer renderer Vitest",
+      "pass": true,
+      "status": "incomplete",
+      "coverage": "unknown",
+      "command_count": 1,
+      "cold_ms": 5849,
+      "warm_ms": 667
+    },
+    {
+      "name": "Workspacer Rust plus renderer Vitest",
+      "pass": true,
+      "status": "incomplete",
+      "coverage": "unknown",
+      "command_count": 2,
+      "cold_ms": 6473,
+      "warm_ms": 707
+    }
+  ]
+}
