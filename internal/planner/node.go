@@ -14,6 +14,7 @@ type nodeManifest struct {
 	Dependencies    map[string]string `json:"dependencies"`
 	DevDependencies map[string]string `json:"devDependencies"`
 	Scripts         map[string]string `json:"scripts"`
+	Workspaces      json.RawMessage   `json:"workspaces"`
 	PackageManager  string            `json:"packageManager"`
 }
 
@@ -29,8 +30,19 @@ func (r *resolver) node(f string) ([]runner.Command, error) {
 		if !ok {
 			return nil, errors.New("no owning package.json")
 		}
+		b, err := r.read(path.Join(pkg, "package.json"))
+		if err != nil {
+			return nil, err
+		}
+		var manifest nodeManifest
+		if err = json.Unmarshal(b, &manifest); err != nil {
+			return nil, err
+		}
+		if len(manifest.Workspaces) > 0 && string(manifest.Workspaces) != "null" {
+			return nil, errors.New("workspace manifest/lock changes require explicit mappings for affected workspace packages")
+		}
 		var configs []string
-		err := r.walkManifests(func(p string) error {
+		err = r.walkManifests(func(p string) error {
 			if nodeConfigKind(p) == "" && !nonstandardNodeConfig(p) {
 				return nil
 			}

@@ -63,3 +63,11 @@ func TestDirectNodeScripts(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkspaceManifestRefusesIncompleteMemberInference(t *testing.T) {
+	root := tree(t, map[string]string{"package.json": `{"workspaces":["packages/*"],"devDependencies":{"vitest":"4"}}`, "packages/child/package.json": `{"devDependencies":{"jest":"30"}}`})
+	p, err := Build(root, selection("package-lock.json"))
+	if err == nil || p.Status != "incomplete" || !strings.Contains(strings.Join(p.Diagnostics, " "), "workspace") {
+		t.Fatalf("%+v %v", p, err)
+	}
+}

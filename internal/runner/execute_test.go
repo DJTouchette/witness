@@ -239,3 +239,34 @@ func TestExecuteRejectsOutsideSymlink(t *testing.T) {
 		t.Fatal("executed outside repository")
 	}
 }
+
+func TestExecuteAllowsInsideSymlink(t *testing.T) {
+	skipWithoutSh(t)
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "real"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(root, "real"), filepath.Join(root, "alias")); err != nil {
+		t.Skip(err)
+	}
+	c := sh("touch SENTINEL")
+	c.Cwd = "alias"
+	if code, err := Execute(c, root, nil, nil); err != nil || code != 0 {
+		t.Fatalf("%d %v", code, err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "real/SENTINEL")); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestSourceReadsRejectOutsideSymlink(t *testing.T) {
+	root, outside := t.TempDir(), t.TempDir()
+	if err := os.WriteFile(filepath.Join(outside, "Test.java"), []byte("package outside;"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(root, "out")); err != nil {
+		t.Skip(err)
+	}
+	if b, err := readRepoFile(root, "out/Test.java"); err == nil || len(b) > 0 {
+		t.Fatalf("read outside source: %q %v", b, err)
+	}
+}

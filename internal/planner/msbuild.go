@@ -138,7 +138,7 @@ func (s *msScan) nodes(nodes []msNode, f string, conditional, inTarget bool) {
 				s.issue(f, "unresolved Import "+raw)
 				continue
 			}
-			pattern, err := s.localPath(path.Dir(f), value)
+			pattern, err := s.localPath(path.Dir(f), strings.ReplaceAll(value, "\\", "/"))
 			if err != nil || strings.Contains(pattern, "**") {
 				s.issue(f, "unsupported/outside Import "+raw)
 				continue
@@ -222,7 +222,7 @@ func (s *msScan) reference(ref msReference) {
 		s.issue(ref.file, "unresolved/target-time ProjectReference "+raw)
 		return
 	}
-	valuePath, err := s.localPath(path.Dir(s.project), value)
+	valuePath, err := s.localPath(path.Dir(s.project), strings.ReplaceAll(value, "\\", "/"))
 	if err != nil {
 		s.issue(ref.file, "outside ProjectReference "+raw)
 		return

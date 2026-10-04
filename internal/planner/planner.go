@@ -61,7 +61,7 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 		return p, nil
 	}
 	if len(r.overrides) == 0 {
-		if cmds, ok := r.selected(result); ok {
+		if cmds, ok := r.selected(result); ok && r.boundaryErr == nil {
 			p.Commands = cmds
 			if err := validateCommands(root, cmds); err != nil {
 				p.Status, p.Coverage = "incomplete", "unknown"
@@ -105,6 +105,9 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 		}
 		p.Commands = append(p.Commands, cmds...)
 	}
+	if r.boundaryErr != nil {
+		errs = append(errs, r.boundaryErr)
+	}
 	p.Commands = dedup(p.Commands)
 	p.Diagnostics = append(p.Diagnostics, selector.CoverageReasons(result)...)
 	if result.Summary.Filtered > 0 {
@@ -133,6 +136,7 @@ type resolver struct {
 	projectErr            error
 	scanned               bool
 	projectIssuesReported bool
+	boundaryErr           error
 }
 
 func (r *resolver) resolve(f string) ([]runner.Command, error) {
@@ -281,6 +285,7 @@ func (r *resolver) read(f string) ([]byte, error) {
 func (r *resolver) exists(f string) bool {
 	full, err := repopath.Resolve(r.root, f)
 	if err != nil {
+		r.boundaryErr = err
 		return false
 	}
 	st, err := os.Stat(full)
@@ -289,6 +294,7 @@ func (r *resolver) exists(f string) bool {
 func (r *resolver) dirExists(f string) bool {
 	full, err := repopath.Resolve(r.root, f)
 	if err != nil {
+		r.boundaryErr = err
 		return false
 	}
 	st, err := os.Stat(full)

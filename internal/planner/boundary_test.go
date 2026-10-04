@@ -60,3 +60,15 @@ func TestExecutionRechecksReadyPlan(t *testing.T) {
 		t.Fatal("outside sentinel")
 	}
 }
+
+func TestUnsafeManifestCannotHideBehindAnotherOwner(t *testing.T) {
+	root := tree(t, map[string]string{"go.mod": "module root\n", "nested/a.go": "package nested"})
+	outside := tree(t, map[string]string{"go.mod": "module outside\n"})
+	if err := os.Symlink(filepath.Join(outside, "go.mod"), filepath.Join(root, "nested/go.mod")); err != nil {
+		t.Skip(err)
+	}
+	p, err := Build(root, selection("nested/a.go"))
+	if err == nil || p.Status != "incomplete" {
+		t.Fatalf("%+v %v", p, err)
+	}
+}
