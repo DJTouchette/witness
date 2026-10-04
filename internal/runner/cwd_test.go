@@ -21,7 +21,7 @@ func TestCwdExecutionAndPOSIXRendering(t *testing.T) {
 		t.Fatal(err)
 	}
 	// macOS temp paths can begin with /var, an alias of /private/var.
-	// Both direct execution and the shell report the physical directory.
+	// Direct execution uses the physical directory; shell pwd may keep aliases.
 	full, err := filepath.EvalSymlinks(full)
 	if err != nil {
 		t.Fatal(err)
@@ -35,8 +35,10 @@ func TestCwdExecutionAndPOSIXRendering(t *testing.T) {
 	shell := exec.Command("sh", "-c", c.String())
 	shell.Dir = root
 	b, err := shell.CombinedOutput()
-	if err != nil || strings.TrimSpace(string(b)) != full {
-		t.Fatalf("rendered cwd/quoting mismatch: %v %s", err, b)
+	// The rendered shell command may preserve a logical /var path in pwd.
+	renderedPath, pathErr := filepath.EvalSymlinks(strings.TrimSpace(string(b)))
+	if err != nil || pathErr != nil || renderedPath != full {
+		t.Fatalf("rendered cwd/quoting mismatch: %v (path: %v) %s", err, pathErr, b)
 	}
 	c.Cwd = "../outside"
 	if _, err := Execute(c, root, &out, &out); err == nil {
