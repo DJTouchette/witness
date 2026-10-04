@@ -113,3 +113,36 @@ The independent XML verifier checks each target's test evidence and literal
 reference chain back to the changed source owner without executing MSBuild.
 Workspacer desktop cases require a wrapper diagnostic; the native-only case
 remains ready. Audits create temporary indexes and never execute application tests.
+
+## Cargo physical identity
+
+Cargo reverse path dependencies use validated physical crate directories, including
+in-repository directory aliases, alias chains, existing path components and native
+filesystem identity. Changed alias and physical paths produce the same deduplicated
+suites. The manifest scan canonicalizes a symlink repository root. Local dependencies
+that escape the root, are missing/dangling/cyclic, or point outside the bounded scan
+produce incomplete coverage while retaining known commands. No Cargo metadata,
+build script or runner is launched during planning.
+
+A symlinked Cargo.toml in a *different directory* is not the same crate: Cargo uses
+that containing directory for sources and relative dependencies. Such suites keep
+their usable manifest paths. A change to the shared physical manifest affects all
+those suites. Workspace inheritance (including package.workspace and a root package)
+uses the same directory identities. Absolute/drive-qualified dependency paths are
+not supported; use repository-relative paths or explicit mappings. Filesystem case
+is native, not lowercased; Linux is the runtime-verified platform.
+
+The reusable alias audit has a tiny offline fixture. To materialize it in scratch:
+
+```sh
+PROOF_DIR=$(mktemp -d)
+cp -R internal/e2e/testdata/fixtures/rust-alias "$PROOF_DIR/repo"
+(cd "$PROOF_DIR/repo" && git init -q && ln -s core core-alias)
+witness audit audits/cargo-alias.json --root "$PROOF_DIR/repo"
+```
+
+`TestCargoAliasPublicPlanningAndAudit` checks the public API, actual CLI plan/exec,
+both audit cases, direct-path control and a build-hook sentinel. The separate
+`TestCargoAliasOfflineExecution` runs only this scratch Cargo fixture offline: core
+alone passes, app fails with exit 101, Witness retains that failure, and correcting
+the assertion makes the emitted suites pass. No real application suite is run.
