@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/djtouchette/witness/internal/repopath"
 	"io"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -73,14 +73,8 @@ func (r *resolver) loadOverrides() error {
 		if !safeRel(o.Cwd) || !r.dirExists(o.Cwd) {
 			return bad("cwd must name a directory inside the repository")
 		}
-		root, _ := filepath.EvalSymlinks(r.root)
-		cwd, err := filepath.EvalSymlinks(filepath.Join(r.root, filepath.FromSlash(o.Cwd)))
-		if err != nil {
-			return bad("cwd cannot be resolved")
-		}
-		rel, err := filepath.Rel(root, cwd)
-		if err != nil || !safeRel(filepath.ToSlash(rel)) {
-			return bad("cwd symlink escapes repository")
+		if _, err := repopath.Directory(r.root, o.Cwd); err != nil {
+			return bad(err.Error())
 		}
 		patterns := append(append(append([]string{}, o.Paths...), o.Tests...), o.Exclude...)
 		for _, pat := range patterns {

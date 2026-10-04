@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/djtouchette/witness/internal/repopath"
 	"github.com/djtouchette/witness/internal/runner"
 	"github.com/djtouchette/witness/internal/selector"
 )
@@ -40,6 +41,14 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 		p.Coverage = "unknown"
 		return p, errors.New("nil test selection")
 	}
+	// Validate all caller paths before selected runners can read test sources.
+	for _, f := range append(append([]string{}, result.ChangedFiles...), testPaths(result)...) {
+		if _, err := repopath.Resolve(root, f); err != nil {
+			p.Status, p.Coverage = "incomplete", "unknown"
+			p.Diagnostics = append(p.Diagnostics, err.Error())
+			return p, err
+		}
+	}
 	r := resolver{root: root}
 	if err := r.loadOverrides(); err != nil {
 		p.Status = "incomplete"
@@ -54,6 +63,12 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 	if len(r.overrides) == 0 {
 		if cmds, ok := r.selected(result); ok {
 			p.Commands = cmds
+			if err := validateCommands(root, cmds); err != nil {
+				p.Status, p.Coverage = "incomplete", "unknown"
+				p.Commands = nil
+				p.Diagnostics = append(p.Diagnostics, err.Error())
+				return p, err
+			}
 			p.Coverage = "selection"
 			return p, nil
 		}
@@ -83,6 +98,10 @@ func Build(root string, result *selector.SelectResult) (*Plan, error) {
 		cmds, err := r.resolve(f)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w: %w", f, runner.ErrNoRunner, err))
+			continue
+		}
+		if err := validateCommands(root, cmds); err != nil {
+			errs = append(errs, err)
 			continue
 		}
 		p.Commands = append(p.Commands, cmds...)
@@ -241,18 +260,9 @@ func (r *resolver) read(f string) ([]byte, error) {
 	if !safeRel(f) {
 		return nil, errors.New("path escapes repository")
 	}
-	full := filepath.Join(r.root, filepath.FromSlash(f))
-	resolved, err := filepath.EvalSymlinks(full)
+	full, err := repopath.Resolve(r.root, f)
 	if err != nil {
 		return nil, err
-	}
-	physicalRoot, err := filepath.EvalSymlinks(r.root)
-	if err != nil {
-		return nil, err
-	}
-	rel, err := filepath.Rel(physicalRoot, resolved)
-	if err != nil || !safeRel(filepath.ToSlash(rel)) {
-		return nil, fmt.Errorf("manifest symlink escapes repository: %s", f)
 	}
 	st, err := os.Stat(full)
 	if err != nil {
@@ -264,11 +274,19 @@ func (r *resolver) read(f string) ([]byte, error) {
 	return os.ReadFile(full)
 }
 func (r *resolver) exists(f string) bool {
-	st, err := os.Stat(filepath.Join(r.root, filepath.FromSlash(f)))
+	full, err := repopath.Resolve(r.root, f)
+	if err != nil {
+		return false
+	}
+	st, err := os.Stat(full)
 	return err == nil && st.Mode().IsRegular()
 }
 func (r *resolver) dirExists(f string) bool {
-	st, err := os.Stat(filepath.Join(r.root, filepath.FromSlash(f)))
+	full, err := repopath.Resolve(r.root, f)
+	if err != nil {
+		return false
+	}
+	st, err := os.Stat(full)
 	return err == nil && st.IsDir()
 }
 func (r *resolver) nearest(f string, names ...string) (string, bool) {
@@ -288,8 +306,7 @@ func (r *resolver) nearest(f string, names ...string) (string, bool) {
 	return "", false
 }
 func safeRel(p string) bool {
-	p = filepath.ToSlash(p)
-	return !strings.ContainsAny(p, "\x00\r\n") && p != "" && !filepath.IsAbs(p) && !strings.Contains(p, "\\") && !strings.Contains(p, ":") && p != ".." && !strings.HasPrefix(path.Clean(p), "../")
+	return repopath.Safe(p)
 }
 func dedup(cmds []runner.Command) []runner.Command {
 	out := []runner.Command{}
@@ -364,4 +381,24 @@ func (r *resolver) walkManifests(visit func(string) error) error {
 		rel, _ := filepath.Rel(r.root, p)
 		return visit(filepath.ToSlash(rel))
 	})
+}
+
+func testPaths(result *selector.SelectResult) []string {
+	var paths []string
+	for _, t := range result.Tests {
+		paths = append(paths, t.Path)
+	}
+	return paths
+}
+func validateCommands(root string, cmds []runner.Command) error {
+	for _, c := range cmds {
+		cwd := c.Cwd
+		if cwd == "" {
+			cwd = "."
+		}
+		if _, err := repopath.Directory(root, cwd); err != nil {
+			return fmt.Errorf("command cwd %q: %w", cwd, err)
+		}
+	}
+	return nil
 }

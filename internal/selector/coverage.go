@@ -3,6 +3,7 @@ package selector
 import (
 	"bufio"
 	"fmt"
+	"github.com/djtouchette/witness/internal/repopath"
 	"io"
 	"os"
 	"path/filepath"
@@ -44,7 +45,11 @@ func inlineRustTest(root, p string) bool {
 	if root == "" || filepath.Ext(p) != ".rs" || filepath.IsAbs(p) || p == ".." || strings.HasPrefix(filepath.Clean(p), ".."+string(filepath.Separator)) {
 		return false
 	}
-	f, err := os.Open(filepath.Join(root, p))
+	full, err := repopath.Resolve(root, p)
+	if err != nil {
+		return false
+	}
+	f, err := os.Open(full)
 	if err != nil {
 		return false
 	}

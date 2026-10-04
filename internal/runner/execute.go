@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/djtouchette/witness/internal/repopath"
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"time"
 )
 
@@ -47,14 +47,16 @@ func ExecuteContext(ctx context.Context, command Command, dir string, stdout, st
 	}
 
 	cmd := exec.CommandContext(ctx, command.Argv[0], command.Argv[1:]...)
-	cmd.Dir = dir
-	if command.Cwd != "" && command.Cwd != "." {
-		resolved, ok := repoFile(dir, command.Cwd)
-		if !ok {
-			return -1, fmt.Errorf("command cwd escapes repository: %s", command.Cwd)
-		}
-		cmd.Dir = filepath.Clean(resolved)
+	cwd := command.Cwd
+	if cwd == "" {
+		cwd = "."
 	}
+	resolved, err := repopath.Directory(dir, cwd)
+	if err != nil {
+		return -1, fmt.Errorf("command cwd %q: %w", cwd, err)
+	}
+	// Use the physical path, revalidated at launch even for a previously ready plan.
+	cmd.Dir = resolved
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	// Own process group: cancellation can then signal the runner and every
@@ -63,7 +65,7 @@ func ExecuteContext(ctx context.Context, command Command, dir string, stdout, st
 	cmd.Cancel = func() error { return terminateGroup(cmd) }
 	cmd.WaitDelay = killGrace
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		return exitCodeOf(cmd.ProcessState), fmt.Errorf("running %s: %w", command, ctxErr)
 	}

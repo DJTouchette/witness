@@ -2,13 +2,13 @@ package runner
 
 import (
 	"errors"
+	"github.com/djtouchette/witness/internal/repopath"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
-	"strings"
 )
 
 // A test path on its own does not say how to run it. `mvn test -Dtest=<Class>`,
@@ -38,11 +38,8 @@ func repoFile(root, rel string) (string, bool) {
 	if root == "" || rel == "" {
 		return "", false
 	}
-	clean := filepath.Clean(filepath.FromSlash(rel))
-	if filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
-		return "", false
-	}
-	return filepath.Join(root, clean), true
+	full, err := repopath.Resolve(root, rel)
+	return full, err == nil
 }
 
 // hasFile reports whether a repo-relative path is a regular file in the repo.

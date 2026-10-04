@@ -221,3 +221,21 @@ func TestExecuteAll_StopsOnceCancelled(t *testing.T) {
 		t.Errorf("output = %q; the second command should not have been launched", out.String())
 	}
 }
+
+func TestExecuteRejectsOutsideSymlink(t *testing.T) {
+	skipWithoutSh(t)
+	root, outside := t.TempDir(), t.TempDir()
+	alias := filepath.Join(root, "alias")
+	if err := os.Symlink(outside, alias); err != nil {
+		t.Skip(err)
+	}
+	c := sh("touch SENTINEL")
+	c.Cwd = "alias"
+	code, err := Execute(c, root, nil, nil)
+	if err == nil || code != -1 {
+		t.Fatalf("outside execution accepted: %d %v", code, err)
+	}
+	if _, err := os.Stat(filepath.Join(outside, "SENTINEL")); !os.IsNotExist(err) {
+		t.Fatal("executed outside repository")
+	}
+}
