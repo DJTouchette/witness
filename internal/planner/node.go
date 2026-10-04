@@ -213,6 +213,9 @@ func (r *resolver) nodeWithKind(f, forced string) ([]runner.Command, error) {
 	if m.Scripts["pretest"] != "" || m.Scripts["posttest"] != "" || m.Scripts[kind] != "" {
 		return nil, errors.New("test lifecycle/runner script requires an explicit suite mapping to preserve setup and package-manager semantics")
 	}
+	if strings.ContainsAny(m.Scripts["test"], "\r\n") {
+		return nil, errors.New("multiline test script requires an explicit suite mapping")
+	}
 	script := strings.Fields(m.Scripts["test"])
 	if len(script) > 0 {
 		if script[0] != kind {
@@ -225,7 +228,7 @@ func (r *resolver) nodeWithKind(f, forced string) ([]runner.Command, error) {
 			// This intentionally tiny allowlist cannot narrow test ownership or point
 			// at another config/workspace. Quoted values need a mapping, not shell parsing.
 			allowed := a == "--globals" || strings.HasPrefix(a, "--environment=") || strings.HasPrefix(a, "--reporter=")
-			if !allowed || strings.ContainsAny(a, "; &|$`\"'\\<>\n\r\t") {
+			if !allowed || strings.ContainsAny(a, "; &|$`\"'\\<>*?[]{}()~\n\r\t") {
 				return nil, fmt.Errorf("test script option %q requires an explicit suite mapping (cannot prove whole-suite semantics)", a)
 			}
 			argv = append(argv, a)

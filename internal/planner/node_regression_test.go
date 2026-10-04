@@ -29,7 +29,7 @@ func TestManifestEnumeratesIndependentNodeConfigs(t *testing.T) {
 }
 
 func TestNodeScriptsCannotBeSilentlyBypassed(t *testing.T) {
-	for _, script := range []string{"node run-tests.js", "npm run custom", "cross-env FOO=bar vitest run", "FOO=bar jest", "vitest --config 'with spaces.ts'", "vitest run src/narrow.test.ts", "vitest run --project=unit"} {
+	for _, script := range []string{"node run-tests.js", "npm run custom", "cross-env FOO=bar vitest run", "FOO=bar jest", "vitest --config 'with spaces.ts'", "vitest run src/narrow.test.ts", "vitest run --project=unit", "vitest\nrun", "vitest --environment=*"} {
 		t.Run(script, func(t *testing.T) {
 			root := tree(t, map[string]string{"package.json": `{"devDependencies":{"vitest":"4"},"scripts":{"test":` + quoteJSON(script) + `}}`})
 			p, err := Build(root, selection("src/a.ts"))
