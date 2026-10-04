@@ -151,7 +151,9 @@ suite name in `reason`. Their existence and behavior are not inferred.
 Names must be unique; cwd must exist inside the repository (including after
 symlink resolution); patterns, argv, fields, version and fallback policy are
 validated. Invalid config fails the plan, even if its rule would not match.
-No configuration hooks run. Config affects plans; `select`'s ranked test list
+Map `.witness.json` itself in every affected suite if configuration changes should
+produce commands automatically; otherwise such changes remain incomplete because
+removed mappings cannot be inferred. No configuration hooks run. Config affects plans; `select`'s ranked test list
 continues to report Recon evidence rather than fabricated test-file mappings.
 
 ## Go API
