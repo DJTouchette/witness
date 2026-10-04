@@ -128,7 +128,9 @@ A symlinked Cargo.toml in a *different directory* is not the same crate: Cargo u
 that containing directory for sources and relative dependencies. Such suites keep
 their usable manifest paths. A change to the shared physical manifest affects all
 those suites. Workspace inheritance (including package.workspace and a root package)
-uses the same directory identities. Absolute/drive-qualified dependency paths are
+uses the same directory identities. Cargo lexically normalizes dependency paths
+before resolving aliases; Witness also checks the uncleaned physical traversal so
+`..` cannot erase an outside-root hop or missing component. Absolute/drive-qualified dependency paths are
 not supported; use repository-relative paths or explicit mappings. Filesystem case
 is native, not lowercased; Linux is the runtime-verified platform.
 

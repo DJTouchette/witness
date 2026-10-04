@@ -117,3 +117,54 @@ func TestCargoAliasOfflineExecution(t *testing.T) {
 		t.Fatalf("fixed dependent did not pass: %+v", pass)
 	}
 }
+
+// Cargo normalizes dot-dot lexically, but a symlinked Cargo.toml keeps the
+// containing crate directory. Verify both with actual offline Cargo, not just
+// planner expectations that could encode the same wrong assumption.
+func TestCargoAliasPathSemanticsOffline(t *testing.T) {
+	requireToolchain(t, "cargo", "rust")
+	for _, kind := range []string{"parent components", "manifest file"} {
+		t.Run(kind, func(t *testing.T) {
+			r := cargoAliasRepo(t)
+			t.Setenv("CARGO_NET_OFFLINE", "true")
+			t.Setenv("CARGO_TARGET_DIR", t.TempDir())
+			r.write(t, "nested/core/src/lib.rs", "pub fn value() -> i32 { 1 }\n")
+			r.write(t, "nested/core/Cargo.toml", readFixture(t, r.path("core/Cargo.toml")))
+			changed := "core/src/lib.rs"
+			dependency := "../deep-alias/../core"
+			if kind == "parent components" {
+				r.write(t, "nested/deep/placeholder", "")
+				if err := os.Symlink("nested/deep", r.path("deep-alias")); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				// Shared manifest contents, different sources. Do not deduplicate the
+				// core suite (value=2) with the nested/core suite (value=1).
+				r.remove(t, "nested/core/Cargo.toml")
+				if err := os.Symlink("../../core/Cargo.toml", r.path("nested/core/Cargo.toml")); err != nil {
+					t.Fatal(err)
+				}
+				dependency = "../nested/core"
+				changed = "nested/core/src/lib.rs"
+			}
+			r.write(t, "app/Cargo.toml", strings.ReplaceAll(readFixture(t, r.path("app/Cargo.toml")), "../core-alias", dependency))
+			w, err := witness.New(r.root, witness.WithCacheDir(t.TempDir()))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer w.Close()
+			p, err := w.Plan(&witness.SelectResult{ChangedFiles: []string{changed}})
+			if err != nil || len(p.Commands) != 2 || p.Commands[0].Argv[3] != "./app/Cargo.toml" {
+				t.Fatalf("lost app: %+v %v", p, err)
+			}
+			got := r.runBinary(t, r.root, "run", changed)
+			wantCode, wantTest := 101, "observes_core_value ... FAILED"
+			if kind == "manifest file" {
+				wantCode, wantTest = 0, "observes_core_value ... ok"
+			}
+			if got.code != wantCode || !strings.Contains(got.stdout+got.stderr, wantTest) {
+				t.Fatalf("Cargo semantics: %+v", got)
+			}
+		})
+	}
+}

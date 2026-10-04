@@ -116,6 +116,7 @@ func TestCargoPhysicalParentAndExplicitWorkspace(t *testing.T) {
 	root := tree(t, map[string]string{
 		"ws/Cargo.toml":       "[workspace]\nmembers=['../app','core']\n[workspace.dependencies]\ncore={path='core-alias'}\n",
 		"ws/core/Cargo.toml":  "[package]\nname='core'\nversion='0.1.0'\n",
+		"core/Cargo.toml":     "[package]\nname='core'\nversion='0.1.0'\n",
 		"ws/deep/placeholder": "",
 		"app/Cargo.toml":      "[package]\nname='app'\nversion='0.1.0'\nworkspace='../ws-alias'\n[dependencies]\ncore={workspace=true}\n",
 		"other/Cargo.toml":    "[package]\nname='other'\nversion='0.1.0'\n[build-dependencies]\ncore={path='../deep-alias/../core'}\n",
@@ -123,9 +124,17 @@ func TestCargoPhysicalParentAndExplicitWorkspace(t *testing.T) {
 	cargoLink(t, root, "ws-alias", "ws")
 	cargoLink(t, root, "ws/core-alias", "core")
 	cargoLink(t, root, "deep-alias", "ws/deep")
-	p, err := Build(root, selection("ws/core/src/new.rs"))
-	if err != nil || !reflect.DeepEqual(cargoTargets(p), []string{"./app/Cargo.toml", "./other/Cargo.toml", "./ws/core/Cargo.toml"}) {
-		t.Fatalf("%+v %v", p, err)
+	for _, tc := range []struct {
+		changed string
+		want    []string
+	}{
+		{"ws/core/src/new.rs", []string{"./app/Cargo.toml", "./ws/core/Cargo.toml"}},
+		{"core/src/new.rs", []string{"./core/Cargo.toml", "./other/Cargo.toml"}},
+	} {
+		p, err := Build(root, selection(tc.changed))
+		if err != nil || !reflect.DeepEqual(cargoTargets(p), tc.want) {
+			t.Fatalf("%s: %+v %v", tc.changed, p, err)
+		}
 	}
 }
 

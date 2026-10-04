@@ -98,6 +98,16 @@ func (r *resolver) cargoDir(dir string) (string, error) {
 	return id, nil
 }
 
+// cargoDependency follows Cargo's lexical normalization before alias resolution.
+// Still validate the uncleaned physical traversal first: a link followed by ..
+// must not erase an outside-root hop or an unresolved path component.
+func (r *resolver) cargoDependency(base, local string) (string, error) {
+	if _, err := r.cargoResolve(base, local, true); err != nil {
+		return "", err
+	}
+	return r.cargoDir(path.Join(base, strings.ReplaceAll(local, "\\", "/")))
+}
+
 func (r *resolver) rust(f string) ([]runner.Command, error) {
 	if !r.cargoScanned {
 		r.cargoScanned = true
@@ -189,12 +199,7 @@ func (r *resolver) rust(f string) ([]runner.Command, error) {
 					anc := dir
 					if doc.Package.Workspace != "" {
 						var err error
-						anc, err = r.cargoResolve(dir, doc.Package.Workspace, true)
-						if err != nil {
-							issues = append(issues, err)
-							continue
-						}
-						anc, err = r.cargoDir(anc)
+						anc, err = r.cargoDependency(dir, doc.Package.Workspace)
 						if err != nil {
 							issues = append(issues, err)
 							continue
@@ -218,10 +223,7 @@ func (r *resolver) rust(f string) ([]runner.Command, error) {
 					}
 				}
 				if local, ok := dep["path"].(string); ok {
-					target, err := r.cargoResolve(base, local, true)
-					if err == nil {
-						target, err = r.cargoDir(target)
-					}
+					target, err := r.cargoDependency(base, local)
 					if err == nil {
 						if _, ok := r.crates[target]; !ok {
 							err = errors.New("dependency is outside manifest scan scope or has no Cargo.toml")
