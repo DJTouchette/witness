@@ -5,7 +5,32 @@ All notable changes to witness are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — 0.5.0
+## [0.6.0] — 2026-10-03
+
+### Added
+
+- Structured `Plan` and `FullSuitePlan` APIs and `select --format plan`, with
+  portable argv/cwd, explicit status/coverage, reasons and diagnostics.
+- Versioned project configuration for suite mappings, exclusions and fallback
+  policy, plus reusable `witness audit` cases and schemas.
+- Static per-project Cargo, npm-script and .NET suite planning, including local
+  Cargo reverse dependencies and bounded MSBuild project references.
+
+### Changed
+
+- Local Cargo patches widen planning to every discovered Cargo suite, retaining
+  workspace and package commands so version-only and transitive consumers are
+  covered. This conservative superset may execute a package more than once.
+- Unsupported overrides, unresolved or excluded targets, compound JS wrappers,
+  external MSBuild imports and physical path uncertainty remain incomplete and
+  refuse execution rather than claiming coverage. Known commands remain evidence.
+- Legacy command APIs refuse plans requiring a non-root cwd; consumers should
+  migrate to structured plans. Legacy selection JSON and text contracts remain.
+- Whole-repository discovery and explicit mappings retain overlapping suites and
+  configured fileless suites. Static discovery does not resolve external graphs,
+  ambient Cargo configuration or excluded independent projects.
+
+## [0.5.0] — 2026-08-25
 
 The theme of this release is **failing closed**. An audit found several paths on
 which witness selected no tests, emitted a command that ran no tests, or emitted

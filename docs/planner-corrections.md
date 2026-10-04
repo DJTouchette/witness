@@ -111,8 +111,10 @@ and `expected_command_count`, as well as expected tests/argv/cwd/status. The cas
 assert all 10 Leroy and 19 Cassadol targets, not only one representative target.
 The independent XML verifier checks each target's test evidence and literal
 reference chain back to the changed source owner without executing MSBuild.
-Workspacer desktop cases require a wrapper diagnostic; the native-only case
-remains ready. Audits create temporary indexes and never execute application tests.
+Workspacer native and mixed cases remain incomplete/unknown because excluded
+vendor patch targets cannot be resolved; they retain seven and eight commands,
+respectively. Desktop cases also require a wrapper diagnostic. Audits create
+temporary indexes and never execute application tests.
 
 ## Cargo physical identity
 
