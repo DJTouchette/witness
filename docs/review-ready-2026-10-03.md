@@ -1,5 +1,8 @@
 # Witness planner corrections: review handoff
 
+Historical handoff for the source below. The later Cargo and Rivet doctor fixes
+and current gates are recorded in [cargo-review-handoff-2026-10-03.md](cargo-review-handoff-2026-10-03.md).
+
 Source checked: `3318c90008d1a9e68a94a84e2ddfb5d56867ba91`, on
 `wks/astra-reliable-witness`. The final handoff commit only records evidence.
 Start of this repair: `814b2c33151ff38a92fff9600b3c6de98f46e70a`;

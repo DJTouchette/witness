@@ -1,0 +1,145 @@
+{
+  "witness_source": "0c248bccb7130bcd99de0b40b80f5221336f02f3",
+  "rivet_source": "62e4a6ee609b8a1b2463d0e3dc6c92582fd63e9d",
+  "evidence_directory": "/tmp/witness-cargo-ci-repair",
+  "audits": {
+    "representative": [
+      {
+        "name": "Workspacer native inline tests",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 1,
+        "cold_ms": 6226,
+        "warm_ms": 481
+      },
+      {
+        "name": "Leroy billing project references",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 10,
+        "cold_ms": 2953,
+        "warm_ms": 245
+      },
+      {
+        "name": "Cassadol web Vitest",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 1,
+        "cold_ms": 9864,
+        "warm_ms": 707
+      },
+      {
+        "name": "Cassadol C# DataLayer backend",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 19,
+        "cold_ms": 9168,
+        "warm_ms": 745
+      },
+      {
+        "name": "Cassadol C# plus Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 20,
+        "cold_ms": 9151,
+        "warm_ms": 762
+      },
+      {
+        "name": "Workspacer renderer Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 1,
+        "cold_ms": 6550,
+        "warm_ms": 692
+      },
+      {
+        "name": "Workspacer Rust plus renderer Vitest",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 2,
+        "cold_ms": 6940,
+        "warm_ms": 644
+      }
+    ],
+    "edge-audit": [
+      {
+        "name": "imported ProjectReference retains both actual targets",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2,
+        "cold_ms": 21,
+        "warm_ms": 23
+      },
+      {
+        "name": "shell wrapper requires explicit mapping",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 0,
+        "cold_ms": 33,
+        "warm_ms": 39
+      },
+      {
+        "name": "package manifest retains nested renderer suite",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2,
+        "cold_ms": 28,
+        "warm_ms": 25
+      },
+      {
+        "name": "inferred cwd symlink must remain within root",
+        "pass": true,
+        "status": "incomplete",
+        "coverage": "unknown",
+        "command_count": 0,
+        "cold_ms": 34,
+        "warm_ms": 32
+      }
+    ],
+    "cargo-audit-after": [
+      {
+        "name": "Cargo alias retains the failing reverse dependent",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2,
+        "cold_ms": 46,
+        "warm_ms": 42
+      },
+      {
+        "name": "Changed alias and physical source deduplicate suites",
+        "pass": true,
+        "status": "ready",
+        "coverage": "suites",
+        "command_count": 2,
+        "cold_ms": 47,
+        "warm_ms": 35
+      }
+    ]
+  },
+  "mcp": {
+    "pinned": {
+      "mcp": "pass",
+      "calls": 2,
+      "plan_required": false,
+      "runner_executed": false
+    },
+    "composed": {
+      "mcp": "pass",
+      "calls": 4,
+      "plan_required": true,
+      "runner_executed": false
+    }
+  },
+  "platform": "Linux runtime; no macOS/Windows runtime or release cross-build claims"
+}
