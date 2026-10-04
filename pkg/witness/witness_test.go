@@ -478,3 +478,26 @@ func writeFile(t *testing.T, dir, name, body string) {
 		t.Fatalf("write %s: %v", path, err)
 	}
 }
+
+func TestFullSuitePlanNeverDropsMixedLanguages(t *testing.T) {
+	root := newTestRepo(t)
+	writeFile(t, root, "python/pyproject.toml", "[project]\nname='fixture'\n")
+	writeFile(t, root, "python/tests/test_a.py", "def test_a(): pass\n")
+	w, err := New(root, WithCacheDir(t.TempDir()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Close()
+	p, err := w.FullSuitePlan()
+	if err != nil || p.Status != "ready" || len(p.Commands) != 2 {
+		t.Fatalf("%+v %v", p, err)
+	}
+	if _, err = w.FullSuiteCommand(); err == nil {
+		t.Fatal("legacy full-suite API discarded nested cwd")
+	}
+	writeFile(t, root, "native/test_a.zig", "test {}")
+	p, err = w.FullSuitePlan()
+	if err == nil || p.Status != "incomplete" || p.Coverage != "unknown" {
+		t.Fatalf("%+v %v", p, err)
+	}
+}

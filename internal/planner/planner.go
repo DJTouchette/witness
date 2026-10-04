@@ -157,6 +157,9 @@ func (r *resolver) resolve(f string) ([]runner.Command, error) {
 	if f == ".witness.json" {
 		return nil, errors.New("Witness configuration changed; map .witness.json to all affected suites explicitly (removed mappings cannot be inferred)")
 	}
+	if lang := legacyManifestLanguage(f); lang != "" {
+		return r.legacySuite(path.Dir(f), lang)
+	}
 	switch strings.ToLower(path.Ext(f)) {
 	case ".rs":
 		return r.rust(f)
@@ -214,7 +217,9 @@ func (r *resolver) resolve(f string) ([]runner.Command, error) {
 	case ".ex", ".exs":
 		manifest, lang = "mix.exs", "elixir"
 	case ".py":
-		manifest, lang = "pyproject.toml", "python"
+		if d, ok := r.nearest(f, "pyproject.toml", "pytest.ini", "setup.cfg", "setup.py"); ok {
+			return r.legacySuite(d, "python")
+		}
 	case ".rb":
 		manifest, lang = "Gemfile", "ruby"
 	case ".php":

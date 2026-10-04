@@ -106,3 +106,33 @@ func TestRustInlineNewDeletedAndRenamedFilesUseFreshIndex(t *testing.T) {
 		t.Fatal("new inline test missed after cache refresh")
 	}
 }
+
+func TestMixedNoArgsAndFallbackPlan(t *testing.T) {
+	root := newTestRepo(t)
+	t.Chdir(root)
+	writeFile(t, root, "python/pyproject.toml", "[project]\nname='fixture'\n")
+	writeFile(t, root, "python/new.py", "def new(): pass\n")
+	writeFile(t, root, "new.go", "package calc\n")
+	for _, args := range [][]string{nil, {"new.go", "python/new.py"}, {"new.go", "python/new.py", "unknown.xyz"}} {
+		var out bytes.Buffer
+		cmd := NewRootCmd("test")
+		cmd.SetOut(&out)
+		cmd.SetErr(&bytes.Buffer{})
+		cmd.SetArgs(append([]string{"select", "--format", "plan", "--fallback", "full", "--cache-dir", t.TempDir()}, args...))
+		err := cmd.Execute()
+		var p planner.Plan
+		if e := json.Unmarshal(out.Bytes(), &p); e != nil {
+			t.Fatalf("%v %s", e, out.String())
+		}
+		if len(p.Commands) != 2 {
+			t.Fatalf("lost mixed suites: %+v %v", p, err)
+		}
+		if len(args) == 3 {
+			if err == nil || p.Status != "incomplete" {
+				t.Fatalf("%+v %v", p, err)
+			}
+		} else if err != nil || p.Status != "ready" {
+			t.Fatalf("%+v %v", p, err)
+		}
+	}
+}
